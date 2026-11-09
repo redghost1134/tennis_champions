@@ -22,7 +22,7 @@ export function errorChance({ kind, dist, speed, maxSpeed, errorScale = 1 }) {
 }
 
 // Height of the ball when it crosses the net plane (z = 0); null if it never does.
-function heightAtNet(from, v) {
+export function heightAtNet(from, v) {
   if (v.z === 0) return null;
   const t = -from.z / v.z;
   if (t <= 0) return null;
@@ -40,7 +40,7 @@ function clearingShot(from, to, kind, speed) {
 }
 
 // Trajectory aimed just past the net that is guaranteed to cross it below net height.
-function netShot(from, to, speed) {
+export function netShot(from, to, speed) {
   const v = launch(from, to, speed);
   const h = heightAtNet(from, v);
   if (h !== null && h >= COURT.NET_H - 0.1) {
