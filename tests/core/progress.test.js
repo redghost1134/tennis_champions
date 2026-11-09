@@ -6,7 +6,7 @@ function memStore(initial) {
 }
 function expectDefaults(p) {
   expect(p.getProfile()).toBe(null);
-  expect(p.unlocked()).toBe(1);
+  expect(p.unlocked()).toBe(0); // only the lesson (level 0) is open
   expect(p.muted()).toBe(false);
 }
 
@@ -21,7 +21,7 @@ test('progress : JSON corrompu → défauts', () => {
 test('progress : champs invalides remplacés champ par champ', () => {
   const p = createProgress(memStore({ 'tc.v1': JSON.stringify({ profile: 'bob', unlocked: 99.5, muted: true }) }));
   expect(p.getProfile()).toBe(null);
-  expect(p.unlocked()).toBe(1);
+  expect(p.unlocked()).toBe(0);
   expect(p.muted()).toBe(true);
   const q = createProgress(memStore({ 'tc.v1': JSON.stringify({ profile: 'yazan', unlocked: 50, muted: 'x' }) }));
   expect(q.getProfile()).toBe('yazan');
@@ -73,4 +73,22 @@ test('progress : persistance entre instances', () => {
   expect(q.getProfile()).toBe('ghassan');
   expect(q.muted()).toBe(true);
   expect(q.unlocked()).toBe(3);
+});
+
+test('progress : réussir le Cours (recordWin(0)) débloque le niveau 1', () => {
+  const p = createProgress(memStore());
+  expect(p.unlocked()).toBe(0);
+  p.recordWin(0);
+  expect(p.unlocked()).toBe(1);
+});
+
+test('progress : une tablette qui a déjà joué garde ses déblocages', () => {
+  const p = createProgress(memStore({ 'tc.v1': JSON.stringify({ profile: 'ghassan', unlocked: 5 }) }));
+  expect(p.unlocked()).toBe(5);
+  p.recordWin(0);
+  expect(p.unlocked()).toBe(5);
+});
+
+test('progress : unlocked négatif ramené à 0', () => {
+  expect(createProgress(memStore({ 'tc.v1': JSON.stringify({ unlocked: -3 }) })).unlocked()).toBe(0);
 });

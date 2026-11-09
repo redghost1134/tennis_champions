@@ -22,6 +22,8 @@ const CSS = `
 .tc-top { top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
 .tc-top .tc-btn { width: 64px; height: 64px; font-size: 30px; border-radius: 50%; }
 .tc-hide { display: none !important; }
+.tc-hl { animation: tc-hl .5s ease-in-out infinite alternate !important; z-index: 2; }
+@keyframes tc-hl { from { box-shadow: 0 0 0 4px #fff, 0 5px 0 #1c1d22; } to { box-shadow: 0 0 0 14px #ff5d8f, 0 5px 0 #1c1d22; transform: scale(1.08); } }
 .tc-pause { position: absolute; inset: 0; pointer-events: auto; background: rgba(28,29,34,.55); display: flex;
   align-items: center; justify-content: center; gap: 36px; }
 .tc-pause .tc-btn { width: 180px; height: 150px; flex-direction: column; font-size: 64px; }
@@ -82,10 +84,12 @@ export function createControls(root, { onQuit = () => {}, onClick = () => {}, mu
 
   // d-pad
   const pad = el('tc-ctl tc-pad');
+  const padBtns = {};
   const cells = [null, ['up', '▲'], null, ['left', '◀'], null, ['right', '▶'], null, ['down', '▼'], null];
   for (const c of cells) {
     if (!c) { el('', '', pad); continue; }
-    holdButton(el('tc-btn', c[1], pad), c[0]);
+    padBtns[c[0]] = el('tc-btn', c[1], pad);
+    holdButton(padBtns[c[0]], c[0]);
   }
 
   // action buttons
@@ -126,6 +130,14 @@ export function createControls(root, { onQuit = () => {}, onClick = () => {}, mu
   const quit = el('tc-btn', '🏠<small>Quitter</small>', menu);
   tapButton(resume, () => setPaused(false));
   tapButton(quit, () => onQuit());
+
+  function groupOf(name) {
+    const g = {
+      pad: Object.values(padBtns), aimSlot: [padBtns.left, padBtns.right], serve: [serve],
+      aimL: [aimL], aimR: [aimR], lob: [lob], smash: [smash],
+    };
+    return g[name] ?? [];
+  }
 
   function setPaused(p) {
     paused = p;
@@ -186,6 +198,19 @@ export function createControls(root, { onQuit = () => {}, onClick = () => {}, mu
     },
     get paused() {
       return paused;
+    },
+    // lesson: make one button (or group) blink; returns nothing. Names: pad, aimSlot, serve, aimL, aimR, lob, smash
+    highlight(name) {
+      root.querySelectorAll('.tc-hl').forEach((n) => n.classList.remove('tc-hl'));
+      for (const n of groupOf(name)) n.classList.add('tc-hl');
+    },
+    // screen rectangle of a button (or group) for the coach's pointing hand
+    rectOf(name) {
+      const ns = groupOf(name).filter((n) => n.offsetParent);
+      if (!ns.length) return null;
+      const rs = ns.map((n) => n.getBoundingClientRect());
+      const l = Math.min(...rs.map((r) => r.left)), t = Math.min(...rs.map((r) => r.top));
+      return { left: l, top: t, right: Math.max(...rs.map((r) => r.right)), bottom: Math.max(...rs.map((r) => r.bottom)) };
     },
     // remove the buttons and keyboard listeners (end of a match session)
     destroy() {

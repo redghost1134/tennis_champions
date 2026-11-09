@@ -80,6 +80,12 @@ export const PRESETS = {
     sock: '#06a77d', shoe: '#04694f', brow: '#04694f', ears: false, nose: false, cheeks: false,
     mouthY: -0.135, mouthZ: -0.3, scale: 1.15, trail: '#ff6b1a', fx: 'fire', extras: buildFlamme,
   },
+  // lesson coach: cartoon tribute (white headband, white polo, red/white), no logo or brand
+  roger: {
+    name: 'Roger Federer', skin: HUMAN, shirt: '#f7f7f2', trim: '#e63946', shorts: '#e63946',
+    sock: '#ffffff', shoe: '#ffffff', hair: { style: 'short', c1: '#4a2f1b', c2: '#5c3a22' }, eyeColor: '#3b2a1a',
+    scale: 1.4, trail: '#ff8a8a', fx: null, extras: buildRoger,
+  },
   robomax: {
     name: 'Robo-Max', skin: '#9aa3ad', hand: '#6c757d', shirt: '#6c757d', trim: '#1f56c4', shorts: '#5a636d',
     leg: '#9aa3ad', sock: '#1f56c4', shoe: '#1f56c4', brow: null, ears: false, nose: false, cheeks: false,
@@ -505,6 +511,13 @@ function buildFlamme({ toon, mesh, head, body }) {
   return (u, { t, speed }) => {
     tailP.rotation.z = Math.sin(t * (speed > 0.4 ? 12 : 3)) * 0.35;
   };
+}
+
+function buildRoger({ toon, mesh, head }) {
+  const band = mesh(new THREE.TorusGeometry(0.252, 0.032, 8, 32), toon('#ffffff'), 0, 0.1, 0, head, { ol: 1.08, cast: false });
+  band.rotation.x = PI / 2 - 0.12;
+  // a few strands over the headband
+  for (const s of [-1, 1]) mesh(new THREE.SphereGeometry(0.05, 10, 8), toon('#4a2f1b'), s * 0.08, 0.2, -0.16, head, { cast: false }).scale.set(1.2, 0.6, 0.8);
 }
 
 function buildRobomax({ toon, basic, mesh, head, body }) {

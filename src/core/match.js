@@ -20,6 +20,7 @@ const HIT_Y = [0.15, 2.6];
 const MAX_X = 5;
 const Z_RANGE = [1.5, 11];
 const IDLE = { move: { x: 0, z: 0 }, armed: null, servePress: false, aimDir: 0 };
+const FEED_APEX = { normal: 2.1, lob: 4.2, high: 5.5 };
 
 const other = (s) => (s === 'A' ? 'B' : 'A');
 // +1 for A, -1 for B: sign of z on the side's half, and world x of the side's "right".
@@ -152,14 +153,15 @@ export function createMatch({ format, rng, firstServer = 'A', speedA = 4.4, spee
 
   function serveBall() {
     const server = state.score.server;
-    const roll = rollServe(gaugeZone(state.gauge), rng);
+    const zone = gaugeZone(state.gauge);
+    const roll = rollServe(zone, rng);
     const { p, v } = planServe(server, serveSide(state.score), state.aimSlot, roll);
     state.ball = createBall(p, v);
     state.lastHitter = server;
     state.phase = 'rally';
     shot = { isServe: true, t: 0, bouncedIn: false };
     swing(server, { kind: 'serve', side: 'sm' });
-    emit({ type: 'serve', side: server });
+    emit({ type: 'serve', side: server, zone });
   }
 
   function updateServe(dt, server, input, edge) {
@@ -293,6 +295,22 @@ export function createMatch({ format, rng, firstServer = 'A', speedA = 4.4, spee
     // Live object: read-only for callers (do not mutate).
     get state() {
       return state;
+    },
+    // Lesson drills: the coach (B) sends a ball to A's half. Only between points; returns false otherwise.
+    // kind: 'normal' (flat), 'lob' (high arc), 'high' (to smash: steep drop, high bounce).
+    feed({ to, kind = 'normal' }) {
+      if (state.phase !== 'serve_aim' && state.phase !== 'point_over') return false;
+      const b = state.players.B;
+      const from = { x: b.x, y: 1.0, z: Math.min(b.z, -6) };
+      const target = { x: clamp(to.x, -COURT.HALF_W + 0.3, COURT.HALF_W - 0.3), z: clamp(to.z, 1.5, COURT.HALF_L - 0.5) };
+      const apex = FEED_APEX[kind] ?? FEED_APEX.normal;
+      state.ball = createBall(from, launchApex(from, target, apex));
+      state.lastHitter = 'B';
+      state.phase = 'rally';
+      shot = { isServe: false, t: 0, bouncedIn: false };
+      swing('B', { kind: kind === 'high' ? 'lob' : 'normal', side: 'fh' });
+      emit({ type: 'hit', side: 'B', kind: kind === 'high' ? 'lob' : kind, outcome: 'in', x: from.x, z: from.z });
+      return true;
     },
     update(dt, inputA, inputB) {
       if (!(dt > 0) || !Number.isFinite(dt)) return [];

@@ -19,7 +19,8 @@ function load(storage) {
   const o = raw && typeof raw === 'object' ? raw : {};
   return {
     profile: PROFILES.includes(o.profile) ? o.profile : null,
-    unlocked: Number.isInteger(o.unlocked) ? Math.min(10, Math.max(1, o.unlocked)) : 1,
+    // 0 = only the lesson (Cours) is open; level N unlocked = champions 1..N playable
+    unlocked: Number.isInteger(o.unlocked) ? Math.min(10, Math.max(0, o.unlocked)) : 0,
     muted: typeof o.muted === 'boolean' ? o.muted : false,
   };
 }

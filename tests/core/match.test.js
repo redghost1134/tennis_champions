@@ -338,3 +338,54 @@ test('match quick IA vs IA se termine avec un vainqueur', () => {
   expect(['A', 'B']).toContain(m.state.score.winner);
   expect(hits).toBeGreaterThan(0);
 });
+
+// ---- Task 11b: serve zone and coach feeds (lesson) ----
+test('événement serve : porte la zone de la jauge', () => {
+  const m = createMatch({ format: 'set', rng: constRng(0.99) });
+  const ev = serve(m, 'green');
+  const sv = ev.find((e) => e.type === 'serve');
+  expect(sv.zone).toBe('green');
+});
+
+for (const kind of ['normal', 'lob', 'high']) {
+  test(`feed ${kind} : balle lancée par B vers A, en jeu, frappable par A`, () => {
+    const m = createMatch({ format: 'set', rng: constRng(0.99), firstServer: 'B' });
+    expect(m.feed({ to: { x: 0.5, z: 5.5 }, kind })).toBe(true);
+    expect(m.state.phase).toBe('rally');
+    expect(m.state.lastHitter).toBe('B');
+    expect(m.state.ball.v.z).toBeGreaterThan(0);
+    const ev = [];
+    for (let i = 0; i < 400 && m.state.phase === 'rally'; i++) {
+      const b = m.state.ball;
+      const pl = m.state.players.A;
+      // forehand racket point is x + 0.5: put it on the ball's x
+      const dx = b.p.x - 0.5 - pl.x;
+      const move = { x: Math.abs(dx) > 0.1 ? Math.sign(dx) : 0, z: 0 };
+      ev.push(...m.update(DT, inp({ move, armed: kind === 'high' ? 'smash' : null }), IDLE));
+      if (ev.some((e) => e.type === 'hit' && e.side === 'A')) break;
+    }
+    const hit = ev.find((e) => e.type === 'hit' && e.side === 'A');
+    expect(hit).toBeTruthy();
+    if (kind === 'high') expect(hit.kind).toBe('smash');
+  });
+}
+
+test('feed : passe le filet et rebondit côté A', () => {
+  for (const kind of ['normal', 'lob', 'high']) {
+    for (const x of [-2.5, 0, 2.5]) {
+      const m = createMatch({ format: 'set', rng: constRng(0.99), firstServer: 'B' });
+      m.feed({ to: { x, z: 5.5 }, kind });
+      const ev = runUntil(m, (mm) => mm.state.phase !== 'rally', 600);
+      expect(ev.some((e) => e.type === 'net')).toBe(false);
+      expect(ev.find((e) => e.type === 'bounce').z).toBeGreaterThan(0);
+    }
+  }
+});
+
+test('feed : ignoré pendant un échange', () => {
+  const m = createMatch({ format: 'set', rng: constRng(0.99), firstServer: 'B' });
+  m.feed({ to: { x: 0, z: 5.5 }, kind: 'normal' });
+  const b = m.state.ball;
+  expect(m.feed({ to: { x: 2, z: 5.5 }, kind: 'normal' })).toBe(false);
+  expect(m.state.ball).toBe(b);
+});

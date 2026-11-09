@@ -93,6 +93,9 @@ export function createHud(root) {
         });
       }
     },
+    showScore(on) {
+      score.classList.toggle('tc-hide', !on);
+    },
     showGauge(v) {
       if (v === null || v === undefined) { gauge.classList.add('tc-hide'); return; }
       gauge.classList.remove('tc-hide');

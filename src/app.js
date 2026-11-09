@@ -7,6 +7,7 @@ import { createSfx } from './audio/sfx.js';
 import { createScreens } from './ui/screens.js';
 import { matchOutcome } from './ui/flow.js';
 import { createMatchSession } from './game.js';
+import { createLessonSession } from './lesson-run.js';
 
 // Screen flow: profile → menu → gallery → format → match → end (→ replay / menu).
 // Owns the animation loop: a slow orbiting camera behind the menus, the match session while playing.
@@ -33,7 +34,26 @@ export function startApp(ctx, school, cam, ui) {
     screens.show(name, data);
   }
   const menu = () => inMenus('menu', { profile: progress.getProfile(), muted: progress.muted() });
-  const gallery = () => inMenus('gallery', { unlocked: progress.unlocked(), lessonDone: progress.unlocked() >= 1 });
+  const gallery = () => inMenus('gallery', { unlocked: progress.unlocked(), lessonDone: progress.unlocked() >= 1, lessonPortrait: 'roger' });
+
+  function startLesson() {
+    endSession();
+    screens.hide();
+    sfx.music(false);
+    session = createLessonSession(app, {
+      portrait: portrait('roger'),
+      onQuit: menu,
+      onDone: () => {
+        const first = progress.unlocked() === 0;
+        progress.recordWin(0);
+        screens.show('lessonDone', {
+          profile: progress.getProfile(),
+          unlocks: first ? { id: OPPONENTS[0].id, name: OPPONENTS[0].name } : null,
+        });
+      },
+    });
+    if (import.meta.env.DEV) window.__session = session;
+  }
 
   function startMatch() {
     endSession();
@@ -63,7 +83,7 @@ export function startApp(ctx, school, cam, ui) {
     onChangeProfile: () => inMenus('profile'),
     onToggleMute: () => { const m = !progress.muted(); sfx.setMuted(m); return m; },
     onChallenge: gallery,
-    onLesson: () => {}, // wired in Task 11b
+    onLesson: startLesson,
     onBack: (from) => (from === 'format' ? gallery() : menu()),
     onPickLevel: (l) => {
       level = l;

@@ -138,6 +138,16 @@ export function createScreens(root, deps) {
     },
   };
 
+  SCREENS.lessonDone = (scr, d) => {
+    scr.style.background = 'linear-gradient(180deg, rgba(31,86,196,.35), rgba(28,29,34,.25))';
+    h('div', 'tc-title', 'Bravo ! 🎓', scr);
+    h('div', 'tc-vs', `${img(d.profile)}<span>👍</span>${img('roger')}`, scr);
+    if (d.unlocks) h('div', 'tc-unlock', `${img(d.unlocks.id)}<span>Nouveau champion débloqué !<br>${d.unlocks.name}</span>`, scr);
+    const row = h('div', 'tc-row', '', scr);
+    card(row, 'tc-act2 tc-yellow', '<div class="tc-ico">🏆</div><b>Champions</b>', () => deps.onChallenge());
+    card(row, 'tc-act2', '<div class="tc-ico">🏠</div><b>Menu</b>', () => deps.onMenu());
+  };
+
   return {
     show(name, data = {}) {
       cur?.remove();
