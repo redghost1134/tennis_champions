@@ -126,7 +126,8 @@ test('balle out → point à l adversaire du frappeur', () => {
   const hitEv = runUntil(m, (x) => x.state.lastHitter === 'B', 600, aAway);
   expect(hitEv.find((e) => e.type === 'hit')).toMatchObject({ side: 'B', outcome: 'out' });
   const ev = runUntil(m, (x) => x.state.phase !== 'rally', 600, aAway);
-  expect(ev.find((e) => e.type === 'out')).toMatchObject({ side: 'B' });
+  const bounce = ev.find((e) => e.type === 'bounce');
+  expect(ev.find((e) => e.type === 'out')).toEqual({ type: 'out', side: 'B', x: bounce.x, z: bounce.z });
   expect(ev.find((e) => e.type === 'point')).toMatchObject({ winner: 'A', reason: 'out' });
 });
 
@@ -140,13 +141,58 @@ test('un joueur ne re-frappe pas sa propre balle', () => {
     b.bounces = 1;
     return b;
   };
+  const hitWithin = (frames) => runUntil(m, () => false, frames).find((e) => e.type === 'hit');
   m.state.ball = ball();
   expect(m.state.lastHitter).toBe('A');
-  expect(types(m.update(DT, IDLE, IDLE))).not.toContain('hit');
+  expect(hitWithin(20)).toBeUndefined();
 
   m.state.ball = ball();
   m.state.lastHitter = 'B'; // control: same ball from the opponent is hit
-  expect(m.update(DT, IDLE, IDLE).find((e) => e.type === 'hit')).toMatchObject({ side: 'A' });
+  expect(hitWithin(20)).toMatchObject({ side: 'A' });
+});
+
+// Test-only: puts a rally ball hit by B on A's half (live-state mutation).
+function rallyBallAtA(m, p, v) {
+  const b = createBall(p, v);
+  b.bounces = 1;
+  m.state.ball = b;
+  m.state.lastHitter = 'B';
+}
+
+test('frappe au point le plus proche : joueur bien placé → dist faible', () => {
+  const m = createMatch({ format: 'quick', rng: constRng(0.99) });
+  serve(m, 'green');
+  const A = m.state.players.A;
+  // enters REACH at ≈0.87 m, passes 0.2 m from the forehand racket point
+  rallyBallAtA(m, { x: A.x + 0.5 + 0.2, y: 1, z: A.z - 0.85 }, { x: 0, y: 0, z: 12 });
+  const hit = runUntil(m, (x) => x.state.lastHitter === 'A', 30).find((e) => e.type === 'hit');
+  expect(hit).toMatchObject({ side: 'A' });
+  expect(hit.dist).toBeLessThanOrEqual(0.3);
+  expect(m.state.players.A.swing.side).toBe('fh');
+});
+
+test('frappe avant que la balle ne sorte de la fenêtre de hauteur', () => {
+  const m = createMatch({ format: 'quick', rng: constRng(0.99) });
+  serve(m, 'green');
+  const A = m.state.players.A;
+  // still approaching; after sub-step 1 y ≈ 0.17, sub-step 2 would drop it below 0.15 m: hit at sub-step 1
+  rallyBallAtA(m, { x: A.x + 0.7, y: 0.215, z: A.z - 0.6 }, { x: 0, y: -5, z: 3 });
+  const hit = m.update(1 / 60, IDLE, IDLE).find((e) => e.type === 'hit');
+  expect(hit).toMatchObject({ side: 'A' });
+  expect(hit.dist).toBeGreaterThan(0.5);
+});
+
+test('balle filet qui roule hors limites → point « net », pas « out »', () => {
+  const m = createMatch({ format: 'quick', rng: constRng(0.99) });
+  serve(m, 'green');
+  runUntil(m, (x) => x.state.lastHitter === 'B');
+  // Test-only: B's ball hit the net and rolls wide past |x| = 12 before going dead.
+  const b = createBall({ x: 11.95, y: 0.1, z: -2 }, { x: 10, y: 0, z: -0.5 });
+  b.netHit = true;
+  m.state.ball = b;
+  const ev = m.update(DT, IDLE, IDLE);
+  expect(types(ev)).not.toContain('out');
+  expect(ev.find((e) => e.type === 'point')).toMatchObject({ winner: 'A', reason: 'net' });
 });
 
 test('retour de service de volée impossible', () => {

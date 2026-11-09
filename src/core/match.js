@@ -126,11 +126,11 @@ export function createMatch({ format, rng, firstServer = 'A', speedA = 4.4, spee
     }
   }
 
-  // First bounce in the wrong place (or never bounced in).
-  function badShot() {
+  // First bounce in the wrong place (or never bounced in); `at` = where it was judged.
+  function badShot(at) {
     if (shot.isServe) return fault();
     const hitter = state.lastHitter;
-    emit({ type: 'out', side: hitter, x: state.ball.p.x, z: state.ball.p.z });
+    emit({ type: 'out', side: hitter, x: at.x, z: at.z });
     award(other(hitter), 'out');
   }
 
@@ -211,32 +211,46 @@ export function createMatch({ format, rng, firstServer = 'A', speedA = 4.4, spee
         ? inBox(serviceBox(hitter, serveSide(state.score)), e.x, e.z)
         : isInCourt(e.x, e.z, other(hitter));
       if (ok) shot.bouncedIn = true;
-      else badShot();
+      else badShot(e);
     } else if (b.bounces === 2) award(hitter, 'winner');
   }
 
   function checkResolution() {
     const b = state.ball;
-    if (b.netHit && b.dead) return shot.isServe ? fault() : award(other(state.lastHitter), 'net');
-    if (Math.abs(b.p.x) > 12 || Math.abs(b.p.z) > 20 || shot.t > RESOLVE_T) {
+    const lost = Math.abs(b.p.x) > 12 || Math.abs(b.p.z) > 20 || shot.t > RESOLVE_T;
+    if (b.netHit && (b.dead || lost)) return shot.isServe ? fault() : award(other(state.lastHitter), 'net');
+    if (lost) {
       if (shot.bouncedIn) award(state.lastHitter, 'winner');
-      else badShot();
+      else badShot(b.p);
     }
   }
 
-  function tryHit(inputs) {
-    const b = state.ball;
-    const side = b.p.z > 0 ? 'A' : 'B';
+  // Racket contact available to `side` for ball `b`: { dist, fh } or null if not hittable.
+  function reachOf(b, side) {
     const s = sign(side);
-    if (b.v.z * s <= 0 || state.lastHitter === side || b.netHit || b.bounces > 1) return;
-    if (shot.isServe && b.bounces !== 1) return; // no volley on the return of serve
-    if (b.p.y < HIT_Y[0] || b.p.y > HIT_Y[1]) return;
+    if (b.p.z * s <= 0 || b.v.z * s <= 0 || state.lastHitter === side || b.netHit || b.bounces > 1) return null;
+    if (shot.isServe && b.bounces !== 1) return null; // no volley on the return of serve
+    if (b.p.y < HIT_Y[0] || b.p.y > HIT_Y[1]) return null;
     const pl = state.players[side];
     const dFh = Math.hypot(b.p.x - (pl.x + s * RACKET), b.p.z - pl.z);
     const dBh = Math.hypot(b.p.x - (pl.x - s * RACKET), b.p.z - pl.z);
     const dist = Math.min(dFh, dBh);
-    if (dist > REACH) return;
+    return dist <= REACH ? { dist, fh: dFh <= dBh } : null;
+  }
 
+  // Hits at closest approach: waits while the next sub-step keeps the ball hittable and closer.
+  function tryHit(inputs, h) {
+    const b = state.ball;
+    const side = b.p.z > 0 ? 'A' : 'B';
+    const now = reachOf(b, side);
+    if (!now) return;
+    const ahead = { ...b, p: { ...b.p }, v: { ...b.v } };
+    stepBall(ahead, h);
+    const next = reachOf(ahead, side);
+    if (next && next.dist < now.dist) return;
+
+    const { dist } = now;
+    const pl = state.players[side];
     const input = inputs[side];
     const kind = resolveKind(input.armed, b.p.y);
     const errorP = errorChance({ kind, dist, speed: Math.hypot(pl.vx, pl.vz), maxSpeed: speed[side], errorScale: errorScale[side] });
@@ -244,8 +258,8 @@ export function createMatch({ format, rng, firstServer = 'A', speedA = 4.4, spee
     state.ball = createBall(b.p, v);
     state.lastHitter = side;
     shot = { isServe: false, t: 0, bouncedIn: false };
-    swing(side, { kind, side: kind === 'smash' ? 'sm' : dFh <= dBh ? 'fh' : 'bh' });
-    emit({ type: 'hit', side, kind, outcome, x: b.p.x, z: b.p.z });
+    swing(side, { kind, side: kind === 'smash' ? 'sm' : now.fh ? 'fh' : 'bh' });
+    emit({ type: 'hit', side, kind, outcome, x: b.p.x, z: b.p.z, dist });
   }
 
   // Sub-steps the ball; judging and hits only while the rally is live.
@@ -262,7 +276,7 @@ export function createMatch({ format, rng, firstServer = 'A', speedA = 4.4, spee
         if (state.phase !== 'rally') break;
       }
       if (state.phase === 'rally') checkResolution();
-      if (state.phase === 'rally') tryHit(inputs);
+      if (state.phase === 'rally') tryHit(inputs, h);
     }
   }
 
