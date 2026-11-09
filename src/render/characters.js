@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { buildKidHead } from './kid-head.js';
 
 // Shared biped rig (ported from the art-direction mockup) + per-character heads/accessories.
 // Characters face -z (back number at +z). Rig lives in group.userData.
@@ -28,7 +29,16 @@ const HUMAN = '#f6cfae';
 export const PRESETS = {
   yazan: {
     name: 'Yazan', skin: HUMAN, shirt: '#06d6a0', trim: '#1f56c4', shorts: '#1c1d22',
-    hair: { style: 'short', c1: '#4a2f1b', c2: '#5c3a22' }, number: '7', scale: 1.3, trail: '#c9fff0', fx: null,
+    hair: {
+      style: 'kroos', c1: '#4a2f1b', c2: '#6b4428', front: 0.11, fade: 0.045, topFrom: 0.09, partX: -0.085, shiftX: 0.01,
+      vol: 1.14, locks: 6, fringeY: 0.145, lockL: 0.085, lockH: 0.038, lockTilt: 0.42, lift: 0.022,
+    },
+    // child head (src/render/kid-head.js): round head, iris eyes, open smile
+    face: {
+      shape: { jaw: 0.22, jawZ: 0.08, chin: 0.98, top: 1.06, back: 1.05, cheek: 0.02, wide: 1.07 },
+      eyeSize: 1, eyeX: 0.09, eyeY: -0.015, iris: '#6b4a2b', browY: 0.07, browW: 0.009, mouthY: 0.11,
+    },
+    number: '7', scale: 1.3, trail: '#c9fff0', fx: null,
   },
   ghassan: {
     name: 'Ghassan', skin: HUMAN, shirt: '#ff5d8f', trim: '#ffc72c', shorts: '#1f56c4',
@@ -204,83 +214,87 @@ export function makeCharacter(ctx, presetId) {
   const head = new THREE.Group();
   head.position.y = 1.16;
   body.add(head);
-  if (o.head === 'box') {
-    mesh(new THREE.BoxGeometry(0.46, 0.4, 0.42), skin, 0, 0, 0, head, { ol: 1.045 });
+  let eyes, smile, mouth;
+  if (o.face) {
+    ({ eyes, smile, mouth } = buildKidHead({ ctx, toon, basic, mesh, head, o }));
   } else {
-    const hs = o.headScale ?? [1, 0.97, 1];
-    mesh(new THREE.SphereGeometry(0.235, 28, 22), skin, 0, 0, 0, head, { ol: 1.045 }).scale.set(...hs);
-  }
-  const eyes = new THREE.Group();
-  eyes.position.set(0, 0.01, o.eyeZ ?? -0.2);
-  head.add(eyes);
-  for (const s of [-1, 1]) {
-    if (o.eyes === 'robot') {
-      const e = new THREE.Mesh(new THREE.CircleGeometry(0.048, 20), basic('#7fdbff'));
-      e.position.set(s * 0.085, 0, -0.04);
-      e.rotation.y = PI;
-      eyes.add(e);
+    if (o.head === 'box') {
+      mesh(new THREE.BoxGeometry(0.46, 0.4, 0.42), skin, 0, 0, 0, head, { ol: 1.045 });
     } else {
-      mesh(new THREE.SphereGeometry(0.046, 14, 12), basic('#ffffff'), s * 0.085, 0, 0, eyes, { cast: false }).scale.set(1, 1.18, 0.55);
-      mesh(new THREE.SphereGeometry(0.031, 14, 12), toon(o.eyeColor ?? '#5a3a1e'), s * 0.085, -0.004, -0.02, eyes, { cast: false }).scale.z = 0.6;
-      mesh(new THREE.SphereGeometry(0.017, 10, 8), basic('#111111'), s * 0.085, -0.004, -0.033, eyes, { cast: false });
-      mesh(new THREE.SphereGeometry(0.01, 8, 6), basic('#ffffff'), s * 0.085 + 0.013, 0.014, -0.04, eyes, { cast: false });
+      const hs = o.headScale ?? [1, 0.97, 1];
+      mesh(new THREE.SphereGeometry(0.235, 28, 22), skin, 0, 0, 0, head, { ol: 1.045 }).scale.set(...hs);
     }
-    if (o.ears !== false) mesh(new THREE.SphereGeometry(0.045, 14, 12), skin, s * 0.229, -0.01, 0, head, { cast: false });
-    const brow = o.brow === undefined ? hairC1 : o.brow;
-    if (brow) mesh(new THREE.BoxGeometry(0.075, 0.016, 0.02), toon(brow), s * 0.085, 0.085, -0.215, head, { cast: false }).rotation.z = -s * 0.18;
-    if (o.cheeks !== false) {
-      const ck = new THREE.Mesh(new THREE.CircleGeometry(0.036, 14), new THREE.MeshBasicMaterial({ color: '#ff8fa0', transparent: true, opacity: 0.6 }));
-      ck.position.set(s * 0.135, -0.065, -0.188);
-      ck.rotation.y = PI + s * 0.62;
-      head.add(ck);
+    eyes = new THREE.Group();
+    eyes.position.set(0, 0.01, o.eyeZ ?? -0.2);
+    head.add(eyes);
+    for (const s of [-1, 1]) {
+      if (o.eyes === 'robot') {
+        const e = new THREE.Mesh(new THREE.CircleGeometry(0.048, 20), basic('#7fdbff'));
+        e.position.set(s * 0.085, 0, -0.04);
+        e.rotation.y = PI;
+        eyes.add(e);
+      } else {
+        mesh(new THREE.SphereGeometry(0.046, 14, 12), basic('#ffffff'), s * 0.085, 0, 0, eyes, { cast: false }).scale.set(1, 1.18, 0.55);
+        mesh(new THREE.SphereGeometry(0.031, 14, 12), toon(o.eyeColor ?? '#5a3a1e'), s * 0.085, -0.004, -0.02, eyes, { cast: false }).scale.z = 0.6;
+        mesh(new THREE.SphereGeometry(0.017, 10, 8), basic('#111111'), s * 0.085, -0.004, -0.033, eyes, { cast: false });
+        mesh(new THREE.SphereGeometry(0.01, 8, 6), basic('#ffffff'), s * 0.085 + 0.013, 0.014, -0.04, eyes, { cast: false });
+      }
+      if (o.ears !== false) mesh(new THREE.SphereGeometry(0.045, 14, 12), skin, s * 0.229, -0.01, 0, head, { cast: false });
+      const brow = o.brow === undefined ? hairC1 : o.brow;
+      if (brow) mesh(new THREE.BoxGeometry(0.075, 0.016, 0.02), toon(brow), s * 0.085, 0.085, -0.215, head, { cast: false }).rotation.z = -s * 0.18;
+      if (o.cheeks !== false) {
+        const ck = new THREE.Mesh(new THREE.CircleGeometry(0.036, 14), new THREE.MeshBasicMaterial({ color: '#ff8fa0', transparent: true, opacity: 0.6 }));
+        ck.position.set(s * 0.135, -0.065, -0.188);
+        ck.rotation.y = PI + s * 0.62;
+        head.add(ck);
+      }
     }
-  }
-  if (o.nose !== false) mesh(new THREE.SphereGeometry(0.026, 10, 8), skin, 0, -0.035, -0.232, head, { cast: false });
-  const my = o.mouthY ?? -0.085, mz = o.mouthZ ?? -0.217;
-  let smile, mouth;
-  if (o.eyes === 'robot') {
-    smile = mesh(new THREE.BoxGeometry(0.16, 0.035, 0.02), toon('#1c1d22'), 0, -0.115, -0.215, head, { cast: false });
-    mouth = mesh(new THREE.BoxGeometry(0.16, 0.075, 0.02), basic('#7fdbff'), 0, -0.115, -0.216, head, { cast: false });
-  } else {
-    smile = mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 16, PI), toon(o.mouthColor ?? '#8b2a2a'), 0, my, mz, head, { cast: false });
-    smile.rotation.z = PI;
-    mouth = mesh(new THREE.SphereGeometry(0.045, 14, 10), toon(o.mouthColor ?? '#7a1f1f'), 0, my - 0.013, mz + 0.007, head, { cast: false });
-    mouth.scale.set(1, 0.75, 0.4);
-  }
-  mouth.visible = false;
+    if (o.nose !== false) mesh(new THREE.SphereGeometry(0.026, 10, 8), skin, 0, -0.035, -0.232, head, { cast: false });
+    const my = o.mouthY ?? -0.085, mz = o.mouthZ ?? -0.217;
+    if (o.eyes === 'robot') {
+      smile = mesh(new THREE.BoxGeometry(0.16, 0.035, 0.02), toon('#1c1d22'), 0, -0.115, -0.215, head, { cast: false });
+      mouth = mesh(new THREE.BoxGeometry(0.16, 0.075, 0.02), basic('#7fdbff'), 0, -0.115, -0.216, head, { cast: false });
+    } else {
+      smile = mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 16, PI), toon(o.mouthColor ?? '#8b2a2a'), 0, my, mz, head, { cast: false });
+      smile.rotation.z = PI;
+      mouth = mesh(new THREE.SphereGeometry(0.045, 14, 10), toon(o.mouthColor ?? '#7a1f1f'), 0, my - 0.013, mz + 0.007, head, { cast: false });
+      mouth.scale.set(1, 0.75, 0.4);
+    }
+    mouth.visible = false;
 
-  const style = o.hair?.style ?? 'none';
-  if (style === 'short') {
-    const cap = mesh(new THREE.SphereGeometry(0.25, 28, 16, 0, PI * 2, 0, PI * 0.5), hairM, 0, 0.02, 0.015, head, { ol: 1.03 });
-    cap.rotation.x = -0.32;
-    for (let i = 0; i < 6; i++) {
-      const f = mesh(new THREE.SphereGeometry(0.06, 10, 8), i % 2 ? hairM : hairM2, -0.13 + i * 0.052, 0.16 - Math.abs(i - 2.5) * 0.008, -0.17, head, { cast: false });
-      f.scale.set(1, 0.55, 0.8);
+    const style = o.hair?.style ?? 'none';
+    if (style === 'short') {
+      const cap = mesh(new THREE.SphereGeometry(0.25, 28, 16, 0, PI * 2, 0, PI * 0.5), hairM, 0, 0.02, 0.015, head, { ol: 1.03 });
+      cap.rotation.x = -0.32;
+      for (let i = 0; i < 6; i++) {
+        const f = mesh(new THREE.SphereGeometry(0.06, 10, 8), i % 2 ? hairM : hairM2, -0.13 + i * 0.052, 0.16 - Math.abs(i - 2.5) * 0.008, -0.17, head, { cast: false });
+        f.scale.set(1, 0.55, 0.8);
+      }
+      for (const s of [-1, 1]) mesh(new THREE.SphereGeometry(0.09, 12, 10), hairM, s * 0.2, 0.06, 0.04, head).scale.set(0.45, 0.9, 1.1);
+      mesh(new THREE.SphereGeometry(0.15, 14, 10), hairM, 0, 0.02, 0.13, head).scale.set(1.45, 1.1, 0.8);
+    } else if (style === 'curly') {
+      // ~130 curls merged into 3 draw calls (two hair colours + one outline shell)
+      const blobs = [];
+      const blob = (r, alt, x, y, z, ol) => blobs.push({ r, alt, x, y, z, ol });
+      for (let i = 0; i < 110; i++) {
+        const th = rnd0() * PI * 2, ph = rnd0() * PI * 0.66;
+        const v = new THREE.Vector3(Math.sin(ph) * Math.cos(th), Math.cos(ph), Math.sin(ph) * Math.sin(th));
+        if (v.z < -0.5 && v.y < 0.62) continue;
+        const r = rnd(0.055, 0.08), alt = rnd0() < 0.35;
+        blob(r, alt, v.x * 0.25, v.y * 0.25 + 0.025, v.z * 0.25, rnd0() < 0.25 ? 1.12 : 0);
+      }
+      for (let i = 0; i < 16; i++) {
+        const a = PI * 0.12 + (i / 15) * PI * 0.76;
+        blob(0.068, i % 3 === 0, Math.cos(a) * 0.225, rnd(-0.17, -0.09), Math.sin(a) * 0.2, 1.1);
+      }
+      for (let i = 0; i < 6; i++) blob(0.06, i % 2 === 0, -0.15 + i * 0.06, 0.165 + Math.sin(i) * 0.01, -0.185, 1.1);
+      const sphere = (r, b) => new THREE.SphereGeometry(r, 10, 8).translate(b.x, b.y, b.z);
+      const merged = (list) => mergeGeometries(list.map((b) => sphere(b.r, b)));
+      const main = blobs.filter((b) => !b.alt), alt = blobs.filter((b) => b.alt), outl = blobs.filter((b) => b.ol);
+      mesh(merged(main), hairM, 0, 0, 0, head);
+      if (alt.length) mesh(merged(alt), hairM2, 0, 0, 0, head, { cast: false });
+      if (outl.length) head.add(new THREE.Mesh(mergeGeometries(outl.map((b) => sphere(b.r * b.ol, b))), ctx.outlineMat));
     }
-    for (const s of [-1, 1]) mesh(new THREE.SphereGeometry(0.09, 12, 10), hairM, s * 0.2, 0.06, 0.04, head).scale.set(0.45, 0.9, 1.1);
-    mesh(new THREE.SphereGeometry(0.15, 14, 10), hairM, 0, 0.02, 0.13, head).scale.set(1.45, 1.1, 0.8);
-  } else if (style === 'curly') {
-    // ~130 curls merged into 3 draw calls (two hair colours + one outline shell)
-    const blobs = [];
-    const blob = (r, alt, x, y, z, ol) => blobs.push({ r, alt, x, y, z, ol });
-    for (let i = 0; i < 110; i++) {
-      const th = rnd0() * PI * 2, ph = rnd0() * PI * 0.66;
-      const v = new THREE.Vector3(Math.sin(ph) * Math.cos(th), Math.cos(ph), Math.sin(ph) * Math.sin(th));
-      if (v.z < -0.5 && v.y < 0.62) continue;
-      const r = rnd(0.055, 0.08), alt = rnd0() < 0.35;
-      blob(r, alt, v.x * 0.25, v.y * 0.25 + 0.025, v.z * 0.25, rnd0() < 0.25 ? 1.12 : 0);
-    }
-    for (let i = 0; i < 16; i++) {
-      const a = PI * 0.12 + (i / 15) * PI * 0.76;
-      blob(0.068, i % 3 === 0, Math.cos(a) * 0.225, rnd(-0.17, -0.09), Math.sin(a) * 0.2, 1.1);
-    }
-    for (let i = 0; i < 6; i++) blob(0.06, i % 2 === 0, -0.15 + i * 0.06, 0.165 + Math.sin(i) * 0.01, -0.185, 1.1);
-    const sphere = (r, b) => new THREE.SphereGeometry(r, 10, 8).translate(b.x, b.y, b.z);
-    const merged = (list) => mergeGeometries(list.map((b) => sphere(b.r, b)));
-    const main = blobs.filter((b) => !b.alt), alt = blobs.filter((b) => b.alt), outl = blobs.filter((b) => b.ol);
-    mesh(merged(main), hairM, 0, 0, 0, head);
-    if (alt.length) mesh(merged(alt), hairM2, 0, 0, 0, head, { cast: false });
-    if (outl.length) head.add(new THREE.Mesh(mergeGeometries(outl.map((b) => sphere(b.r * b.ol, b))), ctx.outlineMat));
   }
 
   const shadow = new THREE.Mesh(
