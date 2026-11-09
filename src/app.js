@@ -8,6 +8,7 @@ import { createScreens } from './ui/screens.js';
 import { matchOutcome } from './ui/flow.js';
 import { createMatchSession } from './game.js';
 import { createLessonSession } from './lesson-run.js';
+import { createQualityGovernor } from './core/quality.js';
 
 // Screen flow: profile → menu → gallery → format → match → end (→ replay / menu).
 // Owns the animation loop: a slow orbiting camera behind the menus, the match session while playing.
@@ -24,9 +25,29 @@ export function startApp(ctx, school, cam, ui) {
   let level = 1, format = 'quick';
   const opp = () => OPPONENTS[level - 1];
 
+  // keep the screen awake while playing (ignored where the API is missing or refused)
+  let wakeLock = null;
+  async function keepAwake(on) {
+    try {
+      if (on && !wakeLock && navigator.wakeLock) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener?.('release', () => { wakeLock = null; });
+      } else if (!on && wakeLock) {
+        await wakeLock.release();
+        wakeLock = null;
+      }
+    } catch {
+      wakeLock = null;
+    }
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible' && session) keepAwake(true);
+  });
+
   function endSession() {
     session?.destroy();
     session = null;
+    keepAwake(false);
   }
   function inMenus(name, data) {
     endSession();
@@ -40,6 +61,7 @@ export function startApp(ctx, school, cam, ui) {
     endSession();
     screens.hide();
     sfx.music(false);
+    keepAwake(true);
     session = createLessonSession(app, {
       portrait: portrait('roger'),
       onQuit: menu,
@@ -59,6 +81,7 @@ export function startApp(ctx, school, cam, ui) {
     endSession();
     screens.hide();
     sfx.music(false);
+    keepAwake(true);
     session = createMatchSession(app, {
       level,
       format,
@@ -97,10 +120,15 @@ export function startApp(ctx, school, cam, ui) {
   if (progress.getProfile()) menu();
   else inMenus('profile');
 
+  const governor = createQualityGovernor({ start: 'medium', warmup: 2 });
   let last = performance.now(), t = 0;
   ctx.renderer.setAnimationLoop((now) => {
-    const dt = Math.min((now - last) / 1000, 0.05);
+    const raw = (now - last) / 1000;
+    const dt = Math.min(raw, 0.05);
     last = now;
+    const q = governor.tick(raw);
+    if (q) ctx.setQuality(q);
+    if (import.meta.env.DEV) window.__quality = governor.level;
     t += dt;
     school.tick(t, dt);
     if (session) session.tick(dt, t);
