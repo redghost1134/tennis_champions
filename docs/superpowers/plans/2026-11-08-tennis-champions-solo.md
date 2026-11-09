@@ -406,7 +406,7 @@ test('match quick IA vs IA se termine avec un vainqueur', ...)  // boucle ≤ 20
 - Produces: `createScreens(root, deps) => { show('profile'|'menu'|'gallery'|'format'|'end', data) }`.
 - Parcours :
   1. **Profil** (si `getProfile()` est null) : deux gros portraits « Yazan » / « Ghassan ».
-  2. **Menu** : bouton « Défier un champion » (trophée) ; bouton « Jouer contre mon frère » visible mais grisé avec un cadenas (Phase 2) ; petit bouton profil (changer) et son.
+  2. **Menu** : bouton « Défier un champion » (trophée) ; petit bouton profil (changer) et son. **Aucun bouton « Jouer contre mon frère » en Phase 1** (décision utilisateur : multijoueur non exposé, ajouté en Phase 2).
   3. **Galerie** : 10 cartes portrait + niveau + étoiles ; verrouillées grisées avec cadenas.
   4. **Durée** : trois gros boutons à pictogrammes — 1 balle (« Rapide »), 3 balles (« Normal »), coupe (« Set »).
   5. **Match**.
