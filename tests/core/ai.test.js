@@ -110,3 +110,38 @@ test('IA au service relâche dans la zone choisie', () => {
   }
   expect(zones.size).toBe(3);
 });
+
+test('IA : deux points consécutifs avec lastHitter A repartent propres', () => {
+  const params = { ...OPPONENTS[0].ai, aimWide: 1, lob: 1, reaction: 0.5 };
+  const ai = createAI(params, createRng(5));
+  const v = { me: { x: 0, z: -8.5 }, phase: 'rally', iAmServer: false, opponent: { x: 0, z: 8 }, gauge: 0, lastHitter: 'A' };
+  let out;
+  for (let t = 0; t < 0.7; t += DT) out = ai.decide({ ...v, ball: incomingBall() }, DT);
+  expect(out.armed).toBe('lob');
+  // fin du point 1 puis service de A (lastHitter reste 'A')
+  ai.decide({ ...v, ball: null, phase: 'serve_aim' }, DT);
+  ai.decide({ ...v, ball: null, phase: 'serve_power' }, DT);
+  // point 2 : la balle repart, la réaction doit être attendue de nouveau
+  out = ai.decide({ ...v, ball: incomingBall() }, DT);
+  expect(out.armed).toBe(null);
+  expect(out.aimDir).toBe(0);
+  for (let t = 0; t < 0.6; t += DT) out = ai.decide({ ...v, ball: incomingBall() }, DT);
+  expect(out.armed).toBe('lob');
+  expect(out.aimDir).not.toBe(0);
+});
+
+test('IA : second service (après faute) appuie de nouveau sur la touche de lancer', () => {
+  const ai = createAI({ ...OPPONENTS[0].ai }, createRng(2));
+  const base = { me: { x: 0, z: -9 }, ball: null, iAmServer: true, opponent: { x: 0, z: 8 }, gauge: 0, lastHitter: null };
+  for (let round = 0; round < 2; round++) {
+    let pressed = false;
+    for (let t = 0; t < 2 && !pressed; t += DT) pressed = ai.decide({ ...base, phase: 'serve_aim' }, DT).servePress;
+    expect(pressed).toBe(true);
+    let released = false;
+    for (let t = 0; t < 2 && !released; t += DT) {
+      const gauge = gaugeValue(t);
+      released = ai.decide({ ...base, phase: 'serve_power', gauge }, DT).servePress;
+    }
+    expect(released).toBe(true);
+  }
+});

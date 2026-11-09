@@ -21,6 +21,7 @@ export function createAI(params, rng, side = 'B') {
   let aimTimer = 0;
   let tossed = false;
   let zone = null;
+  let prevPhase = null;
 
   const onMyHalf = (b) => b.p.z * own > 0;
 
@@ -70,6 +71,18 @@ export function createAI(params, rng, side = 'B') {
   const api = {
     lastServeZone: null,
     decide(view, dt) {
+      // chaque point repart propre : service en cours ou balle absente
+      if (view.phase.startsWith('serve') || !view.ball) {
+        prevHitter = null;
+        receiving = false;
+        waited = 0;
+        incoming = { aimDir: 0, armed: null };
+      }
+      if (view.phase === 'serve_aim' && prevPhase !== 'serve_aim') {
+        aimTimer = 0;
+        tossed = false;
+      }
+      prevPhase = view.phase;
       if (view.lastHitter !== prevHitter) {
         prevHitter = view.lastHitter;
         receiving = prevHitter === opp;
