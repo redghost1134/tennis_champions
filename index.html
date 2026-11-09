@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <title>Tennis Champions</title>
+  <meta name="theme-color" content="#1f56c4">
+  <link rel="icon" href="./icons/favicon.ico" sizes="48x48">
+  <link rel="icon" href="./icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon-180x180.png">
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; }
+    body { touch-action: none; overscroll-behavior: none; user-select: none; background: #87ceeb; }
+    #c { display: block; width: 100%; height: 100%; }
+    #ui { position: fixed; inset: 0; pointer-events: none; }
+    #rotate { display: none; position: fixed; inset: 0; z-index: 100; background: #1f56c4; color: #fff;
+      flex-direction: column; align-items: center; justify-content: center; gap: 18px; font: 900 28px 'Trebuchet MS', sans-serif; }
+    #rotate div { font-size: 96px; animation: tc-rot 1.6s ease-in-out infinite; }
+    @keyframes tc-rot { 0%, 30% { transform: rotate(0) } 60%, 100% { transform: rotate(-90deg) } }
+    @media (orientation: portrait) and (max-width: 1100px) { #rotate { display: flex; } }
+  </style>
+  <script type="module" crossorigin src="./assets/index-BwA--B2w.js"></script>
+<link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="ui"></div>
+  <div id="rotate"><div>📱</div>Tourne la tablette</div>
+</body>
+</html>
