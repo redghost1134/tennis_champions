@@ -143,12 +143,13 @@ export function createControls(root, { onQuit = () => {}, onClick = () => {}, mu
     const hidden = mode === 'hidden';
     pad.classList.toggle('tc-hide', hidden);
     right.classList.toggle('tc-hide', hidden);
+    top.classList.toggle('tc-hide', hidden);
     serve.classList.toggle('tc-hide', mode !== 'serve');
     cross.classList.toggle('tc-hide', mode === 'serve');
   }
 
   // keyboard (letters read by character so AZERTY and QWERTY both work): Q lob, S smash, G / D aim left / right
-  window.addEventListener('keydown', (e) => {
+  const onKeyDown = (e) => {
     if (e.key === 'Escape') { setPaused(!paused); return; }
     if (paused) return;
     if (KEYS[e.key]) { e.preventDefault(); state.set(KEYS[e.key], true); return; }
@@ -159,12 +160,15 @@ export function createControls(root, { onQuit = () => {}, onClick = () => {}, mu
     else if (k === 's') { state.toggleArm('smash'); sync(); }
     else if (k === 'g') { state.toggleAim('left'); sync(); }
     else if (k === 'd') { state.toggleAim('right'); sync(); }
-  });
-  window.addEventListener('keyup', (e) => {
+  };
+  const onKeyUp = (e) => {
     if (KEYS[e.key]) state.set(KEYS[e.key], false);
     else if (e.code === 'Space') state.set('serve', false);
-  });
-  window.addEventListener('blur', () => { state.reset(); sync(); });
+  };
+  const onBlur = () => { state.reset(); sync(); };
+  window.addEventListener('keydown', onKeyDown);
+  window.addEventListener('keyup', onKeyUp);
+  window.addEventListener('blur', onBlur);
 
   sync();
   return {
@@ -182,6 +186,13 @@ export function createControls(root, { onQuit = () => {}, onClick = () => {}, mu
     },
     get paused() {
       return paused;
+    },
+    // remove the buttons and keyboard listeners (end of a match session)
+    destroy() {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', onBlur);
+      for (const n of [pad, right, top, menu]) n.remove();
     },
   };
 }

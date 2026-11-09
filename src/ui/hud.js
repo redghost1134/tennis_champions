@@ -73,6 +73,12 @@ export function createHud(root) {
   }
 
   return {
+    destroy() {
+      clearTimeout(flashing);
+      queue.length = 0;
+      root.querySelectorAll('.tc-flash').forEach((n) => n.remove());
+      for (const n of [score, gauge, aim]) n.remove();
+    },
     setScore(s, names) {
       const lab = pointLabel(s);
       const key = JSON.stringify([s.points, s.games, s.server, s.tiebreak, names]);

@@ -10,6 +10,5 @@ if (import.meta.env.DEV) window.__tc = ctx; // dev-only handle for perf checks
 if (location.search.includes('gallery')) {
   import('./render/gallery.js').then((m) => m.startGallery(ctx, school, cam.camera));
 } else {
-  // Task 10 preview: a quick match against level 1, no menus yet (Task 11 adds the screens).
-  import('./game.js').then((m) => m.startQuickMatch(ctx, school, cam, document.getElementById('ui')));
+  import('./app.js').then((m) => m.startApp(ctx, school, cam, document.getElementById('ui')));
 }
