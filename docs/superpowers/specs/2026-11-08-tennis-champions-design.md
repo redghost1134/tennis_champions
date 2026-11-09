@@ -98,9 +98,24 @@ Ghassan sait jouer : **aucun handicap ni aide** n'est appliqué au plus jeune.
 | 9 | Flamme le Dragon | petit dragon gentil ; balles de feu très rapides |
 | 10 | Robo-Max | robot **gris et bleu**, champion final, presque imbattable |
 
-Battre un adversaire (dans n'importe quelle durée de match) débloque le suivant.
+Battre un adversaire (dans n'importe quelle durée de match) débloque le suivant. Le niveau 1 se débloque en réussissant le Cours (§5.7).
 
 **Tous les champions sont des personnages masculins** (demande du 2026-11-09 : aucun personnage féminin dans le jeu).
+
+### 5.7 Le Cours — étape 0 (ajout du 2026-11-09)
+
+Un **Cours** apprend à jouer : ce que fait chaque bouton et comment se déroule un point. C'est **l'étape 0 de la progression** : au premier lancement seul le Cours est ouvert, et **le réussir débloque le niveau 1 (Toto)**. Un bouton **« Cours »** dans le menu principal permet de le refaire à tout moment, même réussi.
+
+- **Entraîneur : Roger Federer**, personnage cartoon en hommage dans le style des autres personnages (cheveux bruns, bandeau blanc, polo blanc, short et raquette rouge/blanc). **Aucun logo « RF » ni marque**. Ses répliques sont des encouragements simples écrits pour le jeu, jamais des citations réelles.
+- **Sur le vrai terrain, une action à la fois** ; il faut réussir l'action pour passer à la suivante :
+  1. se déplacer avec les 4 flèches (aller toucher des cibles au sol) ;
+  2. servir : SERVICE pour lancer, SERVICE quand la jauge est verte ; puis un service dans le rouge pour voir la faute ;
+  3. changer la cible du service avec ◀ ▶ ;
+  4. renvoyer une balle en se plaçant (frappe automatique) ;
+  5. viser à gauche puis à droite (◀🎾 / 🎾▶) ;
+  6. faire un LOB puis un SMASH ;
+  7. jouer un vrai point contre l'entraîneur.
+- À chaque étape : **le bouton concerné clignote, une main animée le montre, une voix en français dit quoi faire** (Ghassan ne sait pas lire) ; une bulle reprend la phrase en texte. En cas d'échec : encouragement et on recommence la même étape, sans punition.
 
 ## 6. Choix faits par le concepteur (à vérifier par le demandeur)
 
@@ -121,10 +136,10 @@ Battre un adversaire (dans n'importe quelle durée de match) débloque le suivan
 ## 7. Parcours d'écrans
 
 1. **Accueil** (premier lancement : choix du profil Yazan / Ghassan).
-2. **Menu** : « Jouer contre mon frère » / « Défier un champion ».
+2. **Menu** : « Jouer contre mon frère » / « Défier un champion » / **« Cours »**.
 3. **Contre mon frère** : Créer (affiche le code) ou Rejoindre (saisir le code) → la tablette qui crée choisit la durée → match.
-4. **Défier un champion** : galerie des 10 adversaires (verrouillés grisés avec cadenas) → choix de la durée → match.
-5. **Match** : HUD score (nom, points, indicateur de serveur), croix à gauche, LOB/SMASH/SERVICE à droite, bouton pause.
+4. **Défier un champion** : galerie avec d'abord la carte **Cours** (Roger Federer), puis les 10 adversaires (verrouillés grisés avec cadenas) → choix de la durée → match. Tant que le Cours n'est pas réussi, Toto est verrouillé.
+5. **Match** : HUD score (nom, points, indicateur de serveur), croix de déplacement à gauche, croix SMASH / visée ◀ ▶ / LOB à droite (SERVICE à la place pendant son service), boutons pause et son.
 6. **Fin de match** : vainqueur célébré (saut, confettis), score final, « Rejouer » / « Menu » ; déblocage animé du champion suivant le cas échéant.
 
 ## 8. Contraintes

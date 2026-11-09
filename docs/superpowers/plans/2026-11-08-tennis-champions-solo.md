@@ -406,16 +406,53 @@ test('match quick IA vs IA se termine avec un vainqueur', ...)  // boucle ≤ 20
 - Produces: `createScreens(root, deps) => { show('profile'|'menu'|'gallery'|'format'|'end', data) }`.
 - Parcours :
   1. **Profil** (si `getProfile()` est null) : deux gros portraits « Yazan » / « Ghassan ».
-  2. **Menu** : bouton « Défier un champion » (trophée) ; petit bouton profil (changer) et son. **Aucun bouton « Jouer contre mon frère » en Phase 1** (décision utilisateur : multijoueur non exposé, ajouté en Phase 2).
-  3. **Galerie** : 10 cartes portrait + niveau + étoiles ; verrouillées grisées avec cadenas.
+  2. **Menu** : bouton « Défier un champion » (trophée) et bouton **« Cours »** (🎓, branché en Task 11b) ; petit bouton profil (changer) et son. **Aucun bouton « Jouer contre mon frère » en Phase 1** (décision utilisateur : multijoueur non exposé, ajouté en Phase 2).
+  3. **Galerie** : carte **Cours** (portrait de Roger, niveau 0) en premier, puis 10 cartes portrait + niveau + étoiles ; verrouillées grisées avec cadenas (`level > unlocked()`).
   4. **Durée** : trois gros boutons à pictogrammes — 1 balle (« Rapide »), 3 balles (« Normal »), coupe (« Set »).
   5. **Match**.
   6. **Fin** : vainqueur qui saute + confettis, score final, « Rejouer » / « Menu » ; si victoire contre le niveau débloquant → animation « Nouveau champion débloqué ! » avec le portrait.
 - Le joueur humain est toujours le côté A avec le personnage du profil ; l'adversaire est B, `speedB` et `errorScaleB` pris dans `OPPONENTS`.
 
 - [ ] **Step 1:** Implémenter `screens.js` et le parcours dans `main.js`.
-- [ ] **Step 2:** Test manuel complet : premier lancement → profil → galerie → Toto → match `quick` gagné → Bobo débloqué ; recharger la page → profil et déblocage conservés. Captures d'écran.
+- [ ] **Step 2:** Test manuel complet (avec `unlocked` forcé à 1 en attendant Task 11b) : premier lancement → profil → galerie → Toto → match `quick` gagné → Bobo débloqué ; recharger la page → profil et déblocage conservés. Captures d'écran.
 - [ ] **Step 3: Commit** `feat(ui): screens and solo flow`
+
+---
+
+### Task 11b: Le Cours — étape 0 avec Roger Federer
+
+Spec : §5.7. Dépend de Task 11 (menu, galerie, fin de parcours).
+
+**Files:**
+- Create: `src/core/lesson.js`, `tests/core/lesson.test.js`, `src/audio/voice.js`, `src/ui/coach.js`, `src/lesson-run.js`
+- Modify: `src/core/progress.js` (+ tests), `src/core/match.js` (+ tests), `src/render/characters.js` (preset `roger`), `src/ui/controls.js`, `src/ui/screens.js`, `src/main.js`
+
+**Interfaces:**
+- `progress` : `unlocked()` vaut désormais **0..10**, défaut **0** (seul le Cours est ouvert) ; `recordWin(0)` → `unlocked = 1`. Une valeur déjà stockée ≥ 1 est conservée (pas de régression pour une tablette qui a déjà joué). Les tests Task 6 « défauts » passent à `unlocked = 0`.
+- `match.js` :
+  - événement `serve` enrichi : `{ type:'serve', side, zone:'green'|'yellow'|'red' }` ;
+  - `match.feed({ to:{x,z}, kind:'normal'|'lob'|'high' })` : en phase `serve_aim` ou `point_over`, lance une balle depuis le côté B vers `to` (côté A), `lastHitter = 'B'`, phase `rally`, jugée comme une frappe de B (`high` = balle haute à smasher, rebond vers z ≈ 4, hauteur ≥ 2 m au passage du joueur).
+- `characters.js` : preset `roger` (nom « Roger Federer », peau claire, cheveux bruns, bandeau blanc, polo blanc, short rouge, raquette rouge/blanc, échelle 1.4), **sans logo**.
+- `lesson.js` (pur, testé) : `LESSON_STEPS` (id, réplique, bouton à montrer) et `createLesson() => { step, line, highlight, onEvents(events, state, input) => 'stay'|'next'|'retry'|'done' }`. Étapes et conditions de réussite :
+  1. `move` — 3 cibles au sol successives (gauche, droite, vers le filet), atteintes à < 0.6 m ; A est receveur, l'entraîneur ne sert pas.
+  2. `serve_green` — événement `serve` de A en zone `green` suivi d'un rebond dans le carré.
+  3. `serve_red` — un service de A en zone `red` (faute ou non : on montre le risque).
+  4. `serve_aim` — au moins un changement de cible (◀ ▶) puis un service bon.
+  5. `return` — balle `feed` vers A ; réussite = `hit` de A avec `outcome:'in'`. Balle manquée (2e rebond, out) → `retry`.
+  6. `aim_left` puis 7. `aim_right` — `hit` de A avec `aimDir` −1 (resp. +1).
+  8. `lob` — `hit` de A `kind:'lob'`. 9. `smash` — balle `feed` `high` ; `hit` de A `kind:'smash'`.
+  10. `point` — vrai point contre l'entraîneur (paramètres IA plus doux que Toto : `speed 1.4, reaction 0.6, aimWide 0, errorScale 1.8`, jamais de lob/smash) ; réussite = point gagné par A ; après 3 points perdus, réussite quand même avec encouragement (choix du concepteur).
+  `done` → `progress.recordWin(0)`.
+- `voice.js` : `createVoice(progress) => { say(text), stop() }` — `speechSynthesis` en `fr-FR` (voix française si disponible), annule la phrase précédente ; muet si le son est coupé ; sans effet si l'API manque.
+- `coach.js` : bulle en bas avec le portrait de Roger et la réplique ; **main animée** qui pointe le bouton de l'étape ; `controls.highlight(name|null)` fait clignoter le bouton (`'up'|'down'|'left'|'right'|'serve'|'aimL'|'aimR'|'lob'|'smash'`) et `controls.rectOf(name)` donne sa position pour la main.
+- Répliques (courtes, tutoiement, jamais de citation réelle), par exemple : « Salut ! Je suis Roger. Utilise les flèches pour aller sur l'étoile ! », « Appuie sur SERVICE pour lancer la balle ! », « Maintenant, appuie encore quand la barre est verte ! », « Bravo ! », « Pas grave, on recommence ! ».
+
+- [ ] **Step 1: Write the failing tests** — `lesson.test.js` (une réussite et un échec par étape à partir d'événements scriptés ; `done` après l'étape 10 ; 3 points perdus → réussite), `progress.test.js` (défaut 0, `recordWin(0)` → 1, stockage existant à 5 conservé), `match.test.js` (`serve.zone` présent ; `feed` normal/lob/high : balle sur le côté A, frappable par A ; `feed` ignoré en phase `rally`).
+- [ ] **Step 2:** `npm test` → FAIL.
+- [ ] **Step 3:** Implémenter `progress`, `match`, `lesson.js` → `npm test` → PASS.
+- [ ] **Step 4:** Implémenter `roger`, `voice.js`, `coach.js`, `controls.highlight/rectOf`, `lesson-run.js` (boucle de jeu du Cours), carte Cours dans la galerie et bouton « Cours » dans le menu.
+- [ ] **Step 5:** Test manuel complet dans Chrome : stockage vide → profil → seul le Cours est ouvert, Toto verrouillé → les 10 étapes (voix, bouton qui clignote, main) → « Toto débloqué ! » → recharger : Toto reste débloqué ; Cours rejouable depuis le menu. Captures d'écran + aucune erreur console.
+- [ ] **Step 6: Commit** `feat: lesson (level 0) with coach Roger`
 
 ---
 
