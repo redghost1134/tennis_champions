@@ -5,6 +5,14 @@ import { makeCharacter, animateCharacter } from './characters.js';
 const SIZE = 256;
 const cache = new Map();
 let R = null;
+let releaseTimer = 0;
+
+function release() {
+  if (!R) return;
+  R.renderer.dispose();
+  R.renderer.forceContextLoss();
+  R = null;
+}
 
 function setup(ctx) {
   const canvas = document.createElement('canvas');
@@ -46,5 +54,8 @@ export function renderPortrait(ctx, presetId) {
   // per-character geometries only; materials/textures may be shared (cached toon materials, strings texture)
   ch.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
   cache.set(presetId, url);
+  // release the second WebGL context once the current batch of portraits is done (tablets cap live contexts)
+  clearTimeout(releaseTimer);
+  releaseTimer = setTimeout(release, 0);
   return url;
 }

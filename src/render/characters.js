@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 // Shared biped rig (ported from the art-direction mockup) + per-character heads/accessories.
 // Characters face -z (back number at +z). Rig lives in group.userData.
@@ -146,19 +147,19 @@ export function makeCharacter(ctx, presetId) {
     hip.position.set(s * 0.09, 0.47, 0);
     body.add(hip);
     mesh(new THREE.CapsuleGeometry(0.068, 0.2, 4, 12), legM, 0, -0.17, 0, hip, { ol: 1.1 });
-    mesh(new THREE.CylinderGeometry(0.074, 0.074, 0.08, 12), sock, 0, -0.32, 0, hip);
+    mesh(new THREE.CylinderGeometry(0.074, 0.074, 0.08, 12), sock, 0, -0.32, 0, hip, { cast: false });
     const sh = mesh(new THREE.CapsuleGeometry(0.072, 0.12, 4, 12), shoe, 0, -0.41, -0.045, hip, { ol: 1.12 });
     sh.rotation.x = PI / 2;
     sh.scale.set(1, 1, 0.72);
-    mesh(new THREE.BoxGeometry(0.14, 0.035, 0.26), trim, 0, -0.465, -0.045, hip);
+    mesh(new THREE.BoxGeometry(0.14, 0.035, 0.26), trim, 0, -0.465, -0.045, hip, { cast: false });
     legs.push(hip);
   }
   mesh(new THREE.CylinderGeometry(0.185, 0.205, 0.2, 20), shorts, 0, 0.5, 0, body, { ol: 1.06 });
   const torso = mesh(new THREE.CapsuleGeometry(0.18, 0.2, 8, 20), shirt, 0, 0.74, 0, body, { ol: 1.06 });
   torso.scale.z = 0.84;
-  const col = mesh(new THREE.TorusGeometry(0.095, 0.028, 8, 20), trim, 0, 0.94, 0, body);
+  const col = mesh(new THREE.TorusGeometry(0.095, 0.028, 8, 20), trim, 0, 0.94, 0, body, { cast: false });
   col.rotation.x = PI / 2;
-  for (const s of [-1, 1]) mesh(new THREE.BoxGeometry(0.02, 0.3, 0.14), trim, s * 0.181, 0.72, 0, body);
+  for (const s of [-1, 1]) mesh(new THREE.BoxGeometry(0.02, 0.3, 0.14), trim, s * 0.181, 0.72, 0, body, { cast: false });
   if (o.number) {
     const back = new THREE.Mesh(
       new THREE.PlaneGeometry(0.3, 0.3),
@@ -181,7 +182,7 @@ export function makeCharacter(ctx, presetId) {
   racket.position.set(0, -0.36, 0);
   arms[1].add(racket);
   mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.16, 10), toon('#1c1d22'), 0, -0.06, 0, racket);
-  mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.12, 8), trim, 0, -0.19, 0, racket);
+  mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.12, 8), trim, 0, -0.19, 0, racket, { cast: false });
   const frame = mesh(new THREE.TorusGeometry(0.14, 0.022, 8, 28), trim, 0, -0.38, 0, racket, { ol: 1.12 });
   frame.scale.set(0.82, 1.1, 1);
   const str = new THREE.Mesh(
@@ -218,7 +219,7 @@ export function makeCharacter(ctx, presetId) {
       mesh(new THREE.SphereGeometry(0.017, 10, 8), basic('#111111'), s * 0.085, -0.004, -0.033, eyes, { cast: false });
       mesh(new THREE.SphereGeometry(0.01, 8, 6), basic('#ffffff'), s * 0.085 + 0.013, 0.014, -0.04, eyes, { cast: false });
     }
-    if (o.ears !== false) mesh(new THREE.SphereGeometry(0.045, 14, 12), skin, s * 0.229, -0.01, 0, head);
+    if (o.ears !== false) mesh(new THREE.SphereGeometry(0.045, 14, 12), skin, s * 0.229, -0.01, 0, head, { cast: false });
     const brow = o.brow === undefined ? hairC1 : o.brow;
     if (brow) mesh(new THREE.BoxGeometry(0.075, 0.016, 0.02), toon(brow), s * 0.085, 0.085, -0.215, head, { cast: false }).rotation.z = -s * 0.18;
     if (o.cheeks !== false) {
@@ -247,23 +248,33 @@ export function makeCharacter(ctx, presetId) {
     const cap = mesh(new THREE.SphereGeometry(0.25, 28, 16, 0, PI * 2, 0, PI * 0.5), hairM, 0, 0.02, 0.015, head, { ol: 1.03 });
     cap.rotation.x = -0.32;
     for (let i = 0; i < 6; i++) {
-      const f = mesh(new THREE.SphereGeometry(0.06, 10, 8), i % 2 ? hairM : hairM2, -0.13 + i * 0.052, 0.16 - Math.abs(i - 2.5) * 0.008, -0.17, head);
+      const f = mesh(new THREE.SphereGeometry(0.06, 10, 8), i % 2 ? hairM : hairM2, -0.13 + i * 0.052, 0.16 - Math.abs(i - 2.5) * 0.008, -0.17, head, { cast: false });
       f.scale.set(1, 0.55, 0.8);
     }
     for (const s of [-1, 1]) mesh(new THREE.SphereGeometry(0.09, 12, 10), hairM, s * 0.2, 0.06, 0.04, head).scale.set(0.45, 0.9, 1.1);
     mesh(new THREE.SphereGeometry(0.15, 14, 10), hairM, 0, 0.02, 0.13, head).scale.set(1.45, 1.1, 0.8);
   } else if (style === 'curly') {
+    // ~130 curls merged into 3 draw calls (two hair colours + one outline shell)
+    const blobs = [];
+    const blob = (r, alt, x, y, z, ol) => blobs.push({ r, alt, x, y, z, ol });
     for (let i = 0; i < 110; i++) {
       const th = rnd0() * PI * 2, ph = rnd0() * PI * 0.66;
       const v = new THREE.Vector3(Math.sin(ph) * Math.cos(th), Math.cos(ph), Math.sin(ph) * Math.sin(th));
       if (v.z < -0.5 && v.y < 0.62) continue;
-      mesh(new THREE.SphereGeometry(rnd(0.055, 0.08), 10, 8), rnd0() < 0.35 ? hairM2 : hairM, v.x * 0.25, v.y * 0.25 + 0.025, v.z * 0.25, head, { ol: rnd0() < 0.25 ? 1.12 : 0 });
+      const r = rnd(0.055, 0.08), alt = rnd0() < 0.35;
+      blob(r, alt, v.x * 0.25, v.y * 0.25 + 0.025, v.z * 0.25, rnd0() < 0.25 ? 1.12 : 0);
     }
     for (let i = 0; i < 16; i++) {
       const a = PI * 0.12 + (i / 15) * PI * 0.76;
-      mesh(new THREE.SphereGeometry(0.068, 10, 8), i % 3 ? hairM : hairM2, Math.cos(a) * 0.225, rnd(-0.17, -0.09), Math.sin(a) * 0.2, head, { ol: 1.1 });
+      blob(0.068, i % 3 === 0, Math.cos(a) * 0.225, rnd(-0.17, -0.09), Math.sin(a) * 0.2, 1.1);
     }
-    for (let i = 0; i < 6; i++) mesh(new THREE.SphereGeometry(0.06, 10, 8), i % 2 ? hairM : hairM2, -0.15 + i * 0.06, 0.165 + Math.sin(i) * 0.01, -0.185, head, { ol: 1.1 });
+    for (let i = 0; i < 6; i++) blob(0.06, i % 2 === 0, -0.15 + i * 0.06, 0.165 + Math.sin(i) * 0.01, -0.185, 1.1);
+    const sphere = (r, b) => new THREE.SphereGeometry(r, 10, 8).translate(b.x, b.y, b.z);
+    const merged = (list) => mergeGeometries(list.map((b) => sphere(b.r, b)));
+    const main = blobs.filter((b) => !b.alt), alt = blobs.filter((b) => b.alt), outl = blobs.filter((b) => b.ol);
+    mesh(merged(main), hairM, 0, 0, 0, head);
+    if (alt.length) mesh(merged(alt), hairM2, 0, 0, 0, head, { cast: false });
+    if (outl.length) head.add(new THREE.Mesh(mergeGeometries(outl.map((b) => sphere(b.r * b.ol, b))), ctx.outlineMat));
   }
 
   const shadow = new THREE.Mesh(
