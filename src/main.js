@@ -10,14 +10,6 @@ if (import.meta.env.DEV) window.__tc = ctx; // dev-only handle for perf checks
 if (location.search.includes('gallery')) {
   import('./render/gallery.js').then((m) => m.startGallery(ctx, school, cam.camera));
 } else {
-  let last = performance.now();
-  let t = 0;
-  ctx.renderer.setAnimationLoop((now) => {
-    const dt = Math.min((now - last) / 1000, 0.05);
-    last = now;
-    t += dt;
-    school.tick(t, dt);
-    cam.follow({ x: 0, z: 8 }, 'A', dt);
-    ctx.render(cam.camera);
-  });
+  // Task 10 preview: a quick match against level 1, no menus yet (Task 11 adds the screens).
+  import('./game.js').then((m) => m.startQuickMatch(ctx, school, cam, document.getElementById('ui')));
 }

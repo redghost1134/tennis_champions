@@ -68,6 +68,7 @@ export function buildSchool(ctx) {
   // net
   const netTex = makeNetTexture();
   const netG = new THREE.Group();
+  netG.name = 'net'; // shaken by effects.js
   scene.add(netG);
   mesh(new THREE.PlaneGeometry(W + 1, 0.8), new THREE.MeshBasicMaterial({ map: netTex, transparent: true, side: THREE.DoubleSide, alphaTest: 0.1 }), 0, NET_H / 2, 0, netG, { cast: false });
   mesh(new THREE.BoxGeometry(W + 1, 0.09, 0.06), toon(C.white), 0, NET_H, 0, netG);
