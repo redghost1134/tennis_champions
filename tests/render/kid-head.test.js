@@ -77,3 +77,9 @@ test('budget tablette : peu d\'objets et de triangles', () => {
   expect(meshes).toBeLessThanOrEqual(20);
   expect(tris).toBeLessThanOrEqual(14000);
 });
+
+test('Ghassan garde ses boucles, avec la couleur de cheveux de Yazan', () => {
+  expect(PRESETS.ghassan.hair.style).toBe('curly');
+  expect(PRESETS.ghassan.hair.c1).toBe(PRESETS.yazan.hair.c1);
+  expect(PRESETS.ghassan.hair.c2).toBe(PRESETS.yazan.hair.c2);
+});

@@ -42,7 +42,7 @@ export const PRESETS = {
   },
   ghassan: {
     name: 'Ghassan', skin: HUMAN, shirt: '#ff5d8f', trim: '#ffc72c', shorts: '#1f56c4',
-    hair: { style: 'curly', c1: '#8b5a2b', c2: '#a06a35' }, number: '4', scale: 1.05, trail: '#ffd1e0', fx: null,
+    hair: { style: 'curly', c1: '#4a2f1b', c2: '#6b4428' }, number: '4', scale: 1.05, trail: '#ffd1e0', fx: null,
   },
   toto: {
     name: 'Toto la Tortue', skin: '#a7c957', shirt: '#e9d8a6', trim: '#6a994e', shorts: '#386641',
