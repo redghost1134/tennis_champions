@@ -14,7 +14,7 @@ test("OPPONENTS : 10 niveaux 1..10 dans l'ordre", () => {
     expect(typeof o.id).toBe('string');
     expect(typeof o.name).toBe('string');
   });
-  expect(OPPONENTS[0].id).toBe('lulu');
+  expect(OPPONENTS[0].id).toBe('toto');
   expect(OPPONENTS[9].ai).toEqual({ speed: 4.8, reaction: 0.08, aimWide: 0.95, errorScale: 0.35, lob: 0.2, smash: 0.6, red: 0.4, yellow: 0.5 });
 });
 

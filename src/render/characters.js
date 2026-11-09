@@ -33,20 +33,20 @@ export const PRESETS = {
     name: 'Ghassan', skin: HUMAN, shirt: '#ff5d8f', trim: '#ffc72c', shorts: '#1f56c4',
     hair: { style: 'curly', c1: '#8b5a2b', c2: '#a06a35' }, number: '4', scale: 1.05, trail: '#ffd1e0', fx: null,
   },
-  lulu: {
-    name: 'Lulu la Tortue', skin: '#a7c957', shirt: '#e9d8a6', trim: '#6a994e', shorts: '#386641',
+  toto: {
+    name: 'Toto la Tortue', skin: '#a7c957', shirt: '#e9d8a6', trim: '#6a994e', shorts: '#386641',
     sock: '#a7c957', shoe: '#6a994e', brow: '#386641', ears: false, nose: false, headScale: [1, 0.95, 1.1],
-    scale: 1.0, trail: '#b5e48c', fx: null, extras: buildLulu,
+    scale: 1.0, trail: '#b5e48c', fx: null, extras: buildToto,
   },
   bobo: {
     name: "Bobo l'Ourson", skin: '#b08968', shirt: '#e76f51', trim: '#ffc72c', shorts: '#1f56c4',
     sock: '#b08968', shoe: '#9c6644', brow: '#6b4226', ears: false, nose: false, cheeks: false,
     mouthY: -0.12, mouthZ: -0.29, scale: 1.25, trail: '#ffd6a5', fx: null, extras: buildBobo,
   },
-  mimi: {
-    name: 'Mimi la Lapine', skin: '#ffffff', shirt: '#ff8fa0', trim: '#ffffff', shorts: '#7b2cbf',
-    sock: '#ffffff', shoe: '#ff8fa0', brow: '#d8d8e0', ears: false, nose: false,
-    scale: 1.0, trail: '#ffc2d1', fx: null, extras: buildMimi,
+  leo: {
+    name: 'Léo le Lapin', skin: '#ffffff', shirt: '#4cc9f0', trim: '#ffffff', shorts: '#1f56c4',
+    sock: '#ffffff', shoe: '#1f56c4', brow: '#d8d8e0', ears: false, nose: false,
+    scale: 1.0, trail: '#bde0fe', fx: null, extras: buildLeo,
   },
   gaston: {
     name: 'M. Gaston', skin: HUMAN, shirt: '#1f56c4', trim: '#15408f', shorts: '#1f56c4', leg: '#1f56c4',
@@ -58,9 +58,10 @@ export const PRESETS = {
     leg: '#ffb300', sock: '#ffb300', shoe: '#ffb300', brow: null, ears: false, nose: false,
     mouthY: -0.125, mouthZ: -0.2, scale: 0.95, trail: '#caf0f8', fx: null, extras: buildPingo,
   },
-  sonia: {
-    name: 'Mme Sonia', skin: '#d9a066', shirt: '#ffc72c', trim: '#1f56c4', shorts: '#1f56c4',
-    hair: { style: 'short', c1: '#1c1d22', c2: '#2b2b33' }, scale: 1.4, trail: '#ffe066', fx: null, extras: buildSonia,
+  barbe: {
+    name: 'Capitaine Barbe-Bleue', skin: '#d9a066', shirt: '#f7f7f2', trim: '#1f56c4', shorts: '#1c1d22',
+    hair: { style: 'short', c1: '#1f3a8a', c2: '#1f56c4' }, brow: '#1f3a8a', cheeks: false,
+    scale: 1.4, trail: '#ffe066', fx: null, extras: buildBarbe,
   },
   kenta: {
     name: 'Kenta le Ninja', skin: '#1c1d22', hand: HUMAN, arm: '#1c1d22', shirt: '#1c1d22', trim: '#e63946',
@@ -68,10 +69,10 @@ export const PRESETS = {
     nose: false, cheeks: false, eyeZ: -0.208, mouthColor: '#2a2b33', scale: 1.15, trail: '#e63946', fx: 'smoke',
     extras: buildKenta,
   },
-  lea: {
-    name: 'Super Léa', skin: '#c68863', shirt: '#1f56c4', trim: '#ffc72c', shorts: '#e63946',
+  noe: {
+    name: 'Super Noé', skin: '#c68863', shirt: '#1f56c4', trim: '#ffc72c', shorts: '#e63946',
     hair: { style: 'short', c1: '#2b1a10', c2: '#3d2616' }, eyeZ: -0.21, cheeks: false,
-    scale: 1.15, trail: '#ffd60a', fx: 'stars', extras: buildLea,
+    scale: 1.15, trail: '#ffd60a', fx: 'stars', extras: buildNoe,
   },
   flamme: {
     name: 'Flamme le Dragon', skin: '#06a77d', shirt: '#06a77d', trim: '#ffb300', shorts: '#e85d04',
@@ -304,7 +305,7 @@ export function makeCharacter(ctx, presetId) {
 }
 
 // ---------- per-character extras (head-space front is -z, head radius ~0.235)
-function buildLulu({ toon, mesh, head, body }) {
+function buildToto({ toon, mesh, head, body }) {
   const shell = mesh(new THREE.SphereGeometry(0.3, 24, 16), toon('#6a994e'), 0, 0.72, 0.16, body, { ol: 1.04 });
   shell.scale.set(1.05, 1.12, 0.62);
   const rim = mesh(new THREE.TorusGeometry(0.3, 0.035, 8, 28), toon('#a7c957'), 0, 0.72, 0.13, body);
@@ -330,7 +331,7 @@ function buildBobo({ toon, mesh, head }) {
   mesh(new THREE.SphereGeometry(0.035, 12, 8), toon('#1c1d22'), 0, -0.035, -0.27, head, { cast: false }).scale.set(1.3, 0.9, 0.8);
 }
 
-function buildMimi({ toon, mesh, head, body }) {
+function buildLeo({ toon, mesh, head, body }) {
   const ears = [];
   for (const s of [-1, 1]) {
     const pivot = new THREE.Group();
@@ -341,7 +342,7 @@ function buildMimi({ toon, mesh, head, body }) {
     mesh(new THREE.CapsuleGeometry(0.03, 0.24, 4, 10), toon('#ffb3c1'), 0, 0.2, -0.022, pivot, { cast: false }).scale.z = 0.4;
     ears.push(pivot);
   }
-  mesh(new THREE.SphereGeometry(0.024, 10, 8), toon('#ff8fa0'), 0, -0.035, -0.235, head, { cast: false }).scale.set(1.3, 0.9, 0.8);
+  mesh(new THREE.SphereGeometry(0.024, 10, 8), toon('#e07a5f'), 0, -0.035, -0.235, head, { cast: false }).scale.set(1.3, 0.9, 0.8);
   mesh(new THREE.BoxGeometry(0.05, 0.045, 0.015), toon('#ffffff'), 0, -0.125, -0.212, head, { cast: false, ol: 1.15 });
   mesh(new THREE.SphereGeometry(0.075, 12, 10), toon('#ffffff'), 0, 0.5, 0.2, body, { ol: 1.08 });
   return (u, { t, speed }) => {
@@ -378,15 +379,41 @@ function buildPingo({ toon, mesh, head, body }) {
   beak.scale.set(1.2, 1, 0.7);
 }
 
-function buildSonia({ toon, mesh, head, body }) {
-  const band = mesh(new THREE.TorusGeometry(0.248, 0.03, 8, 32), toon('#1f56c4'), 0, 0.09, 0.0, head, { ol: 1.08 });
-  band.rotation.x = PI / 2 - 0.3;
-  const tail = mesh(new THREE.SphereGeometry(0.09, 12, 10), toon('#1c1d22'), 0, 0.02, 0.29, head, { ol: 1.08 });
-  tail.scale.set(0.8, 1.3, 0.8);
-  const lanyard = mesh(new THREE.TorusGeometry(0.13, 0.009, 6, 24), toon('#e63946'), 0, 0.89, -0.05, body, { cast: false });
-  lanyard.rotation.x = PI / 2 - 0.65;
-  const wh = mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.075, 12), toon('#c0c0c0'), 0, 0.8, -0.175, body, { ol: 1.15 });
-  wh.rotation.z = PI / 2;
+function buildBarbe({ toon, mesh, head, body, ctx }) {
+  const black = toon('#1c1d22'), blue = toon('#1f56c4'), navy = toon('#1f3a8a');
+  // pirate hat: crown + wide brim turned up at the front, skull badge
+  const crown = mesh(new THREE.SphereGeometry(0.255, 28, 14, 0, PI * 2, 0, PI * 0.5), black, 0, 0.06, 0.01, head, { ol: 1.03 });
+  crown.scale.y = 1.05;
+  const brim = mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.025, 28), black, 0, 0.08, 0.01, head, { ol: 1.05 });
+  brim.scale.z = 0.8;
+  const front = mesh(new THREE.BoxGeometry(0.4, 0.13, 0.025), black, 0, 0.17, -0.25, head, { ol: 1.06 });
+  front.rotation.x = -0.25;
+  mesh(new THREE.BoxGeometry(0.42, 0.018, 0.03), toon('#ffc72c'), 0, 0.235, -0.267, head, { cast: false }).rotation.x = -0.25;
+  const skull = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.11, 0.11),
+    new THREE.MeshBasicMaterial({ map: ctx.textTex('☠', { fg: '#f7f7f2', stroke: '#1c1d22', w: 256, h: 256, font: 0.9 }), transparent: true }),
+  );
+  skull.position.set(0, 0.165, -0.27);
+  skull.rotation.set(-0.25, PI, 0);
+  head.add(skull);
+  // eye patch over the right eye + strap
+  const patch = mesh(new THREE.SphereGeometry(0.052, 14, 10), black, 0.085, 0.012, -0.212, head, { cast: false, ol: 1.08 });
+  patch.scale.set(1.05, 1, 0.35);
+  const strap = mesh(new THREE.TorusGeometry(0.243, 0.008, 6, 32), black, 0, 0.03, 0, head, { cast: false });
+  strap.rotation.set(PI / 2, 0.35, 0);
+  // big blue beard under the mouth
+  const tufts = [[0, -0.2, -0.17, 0.085], [-0.09, -0.16, -0.17, 0.07], [0.09, -0.16, -0.17, 0.07],
+    [-0.16, -0.08, -0.11, 0.06], [0.16, -0.08, -0.11, 0.06], [-0.05, -0.25, -0.13, 0.06], [0.05, -0.25, -0.13, 0.06]];
+  tufts.forEach(([x, y, z, r], i) => mesh(new THREE.SphereGeometry(r, 10, 8), i % 2 ? navy : blue, x, y, z, head, { ol: 1.08 }));
+  for (const s of [-1, 1]) {
+    const m = mesh(new THREE.SphereGeometry(0.04, 12, 8), navy, s * 0.045, -0.075, -0.222, head, { cast: false, ol: 1.1 });
+    m.scale.set(1.4, 0.55, 0.6);
+    m.rotation.z = s * 0.35;
+  }
+  // red sash across the shirt
+  const sash = mesh(new THREE.TorusGeometry(0.18, 0.025, 6, 24), toon('#e63946'), 0, 0.6, 0, body, { cast: false });
+  sash.rotation.x = PI / 2;
+  sash.scale.set(1, 0.84, 1);
 }
 
 function buildKenta({ toon, mesh, head }) {
@@ -412,10 +439,8 @@ function buildKenta({ toon, mesh, head }) {
   };
 }
 
-function buildLea({ toon, mesh, head, body, ctx }) {
+function buildNoe({ toon, mesh, head, body, ctx }) {
   mesh(new THREE.SphereGeometry(0.239, 28, 6, PI * 1.1, PI * 0.8, PI * 0.42, PI * 0.15), toon('#1f56c4'), 0, 0, 0, head, { cast: false, ol: 1.01 });
-  const hair = mesh(new THREE.SphereGeometry(0.15, 14, 10), toon('#2b1a10'), 0, -0.12, 0.13, head, { ol: 1.05 });
-  hair.scale.set(1.5, 1.5, 0.8);
   const star = new THREE.Mesh(
     new THREE.PlaneGeometry(0.2, 0.2),
     new THREE.MeshBasicMaterial({ map: ctx.textTex('★', { fg: '#ffc72c', stroke: '#1c1d22', w: 256, h: 256, font: 0.9 }), transparent: true }),

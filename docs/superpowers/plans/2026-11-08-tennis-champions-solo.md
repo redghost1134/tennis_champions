@@ -265,14 +265,14 @@ test('outcome out → 1er rebond hors du terrain', ...)
 
 | level | id | name | speed | reaction | aimWide | errorScale | lob | smash | red | yellow |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | lulu | Lulu la Tortue | 1.6 | 0.55 | 0 | 1.6 | 0 | 0 | 0 | 0 |
+| 1 | toto | Toto la Tortue | 1.6 | 0.55 | 0 | 1.6 | 0 | 0 | 0 | 0 |
 | 2 | bobo | Bobo l'Ourson | 1.9 | 0.50 | 0.3 | 1.5 | 0.05 | 0 | 0 | 0.1 |
-| 3 | mimi | Mimi la Lapine | 3.2 | 0.35 | 0.5 | 2.2 | 0.05 | 0.05 | 0.1 | 0.3 |
+| 3 | leo | Léo le Lapin | 3.2 | 0.35 | 0.5 | 2.2 | 0.05 | 0.05 | 0.1 | 0.3 |
 | 4 | gaston | M. Gaston | 2.6 | 0.35 | 0.5 | 1.0 | 0.1 | 0.1 | 0.05 | 0.4 |
 | 5 | pingo | Pingo le Pingouin | 3.4 | 0.25 | 0.55 | 0.9 | 0.1 | 0.15 | 0.1 | 0.5 |
-| 6 | sonia | Mme Sonia | 3.4 | 0.22 | 0.7 | 0.8 | 0.3 | 0.2 | 0.15 | 0.5 |
+| 6 | barbe | Capitaine Barbe-Bleue | 3.4 | 0.22 | 0.7 | 0.8 | 0.3 | 0.2 | 0.15 | 0.5 |
 | 7 | kenta | Kenta le Ninja | 4.4 | 0.15 | 0.7 | 0.7 | 0.15 | 0.3 | 0.2 | 0.5 |
-| 8 | lea | Super Léa | 4.2 | 0.15 | 0.8 | 0.6 | 0.15 | 0.5 | 0.25 | 0.5 |
+| 8 | noe | Super Noé | 4.2 | 0.15 | 0.8 | 0.6 | 0.15 | 0.5 | 0.25 | 0.5 |
 | 9 | flamme | Flamme le Dragon | 4.4 | 0.12 | 0.85 | 0.5 | 0.15 | 0.4 | 0.35 | 0.45 |
 | 10 | robomax | Robo-Max | 4.8 | 0.08 | 0.95 | 0.35 | 0.2 | 0.6 | 0.4 | 0.5 |
 
@@ -368,7 +368,7 @@ test('match quick IA vs IA se termine avec un vainqueur', ...)  // boucle ≤ 20
 **Interfaces:**
 - Consumes: `createScene` helpers.
 - Produces: `makeCharacter(ctx, presetId) => THREE.Group` (userData = rig de la maquette : `root, body, legs[2], arms[2], head, eyes, smile, mouth, frame, swoosh, scale`) ; `animateCharacter(char, { vx, facing:1|-1, swing:null|{kind,side}, swingT, celebrate, sad, ballPos }, t, dt)` ; `PRESETS` (ids : `yazan`, `ghassan`, et les 10 ids de `OPPONENTS`) avec `trail` (couleur de traînée de raquette) ; `renderPortrait(ctx, presetId) => string` (dataURL 256×256, tête et épaules).
-- Apparence des champions : rig bipède commun, têtes/accessoires spécifiques — Lulu (carapace verte, tête de tortue), Bobo (ours brun, oreilles rondes), Mimi (lapine blanche, longues oreilles), M. Gaston (casquette noire, moustache, bleu de travail), Pingo (corps noir/blanc, bec jaune), Mme Sonia (bandeau bleu, sifflet, haut jaune), Kenta (tenue noire, bandeau rouge ; nuage de fumée quand il se déplace vite), Super Léa (masque bleu, cape rouge ; traînée d'étoiles sur smash), Flamme (dragon vert, cornes jaunes ; traînée de feu), Robo-Max (**gris et bleu**, antenne, visière bleue ; traînée bleue lumineuse).
+- Apparence des champions : rig bipède commun, têtes/accessoires spécifiques — Toto (carapace verte, tête de tortue), Bobo (ours brun, oreilles rondes), Léo (lapin blanc, longues oreilles, maillot bleu clair), M. Gaston (casquette noire, moustache, bleu de travail), Pingo (corps noir/blanc, bec jaune), Capitaine Barbe-Bleue (chapeau de pirate noir à tête de mort, barbe bleue, bandeau sur l'œil, ceinture rouge), Kenta (tenue noire, bandeau rouge ; nuage de fumée quand il se déplace vite), Super Noé (masque bleu, cape rouge ; traînée d'étoiles sur smash), Flamme (dragon vert, cornes jaunes ; traînée de feu), Robo-Max (**gris et bleu**, antenne, visière bleue ; traînée bleue lumineuse).
 - Animations reprises de la maquette (clés `KEYS.fh/bh/sm`, sautillement d'attente, course + poussière, clignement, bouche ouverte, célébration, tête qui secoue) — **avec la correction `vx = dt>0 ? step/dt : 0`** (bug NaN de la maquette).
 
 - [ ] **Step 1:** Implémenter `makeCharacter` + presets Yazan/Ghassan (portage maquette).
@@ -390,7 +390,7 @@ test('match quick IA vs IA se termine avec un vainqueur', ...)  // boucle ≤ 20
 - `createSfx(progress) => { play('hit'|'bounce'|'net'|'fault'|'point'|'win'|'click'), music(on:boolean), setMuted(b) }` — synthèse WebAudio (pas de fichiers), contexte audio repris au premier toucher.
 
 - [ ] **Step 1:** Implémenter les quatre modules.
-- [ ] **Step 2:** Dans `main.js`, brancher un match `quick` contre Lulu (sans menus) → test manuel : se déplacer, servir (jauge, 3 cibles, faute, double faute), échanger, LOB/SMASH, voir les messages. Capture d'écran + aucune erreur console.
+- [ ] **Step 2:** Dans `main.js`, brancher un match `quick` contre Toto (sans menus) → test manuel : se déplacer, servir (jauge, 3 cibles, faute, double faute), échanger, LOB/SMASH, voir les messages. Capture d'écran + aucune erreur console.
 - [ ] **Step 3: Commit** `feat(ui): controls, HUD, effects and sounds`
 
 ---
@@ -414,7 +414,7 @@ test('match quick IA vs IA se termine avec un vainqueur', ...)  // boucle ≤ 20
 - Le joueur humain est toujours le côté A avec le personnage du profil ; l'adversaire est B, `speedB` et `errorScaleB` pris dans `OPPONENTS`.
 
 - [ ] **Step 1:** Implémenter `screens.js` et le parcours dans `main.js`.
-- [ ] **Step 2:** Test manuel complet : premier lancement → profil → galerie → Lulu → match `quick` gagné → Bobo débloqué ; recharger la page → profil et déblocage conservés. Captures d'écran.
+- [ ] **Step 2:** Test manuel complet : premier lancement → profil → galerie → Toto → match `quick` gagné → Bobo débloqué ; recharger la page → profil et déblocage conservés. Captures d'écran.
 - [ ] **Step 3: Commit** `feat(ui): screens and solo flow`
 
 ---

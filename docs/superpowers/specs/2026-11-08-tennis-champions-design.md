@@ -87,18 +87,20 @@ Ghassan sait jouer : **aucun handicap ni aide** n'est appliqué au plus jeune.
 
 | Niv. | Personnage | Caractère de jeu |
 |---|---|---|
-| 1 | Lulu la Tortue | très lente, renvoie au milieu, doucement |
+| 1 | Toto la Tortue | très lent, renvoie au milieu, doucement |
 | 2 | Bobo l'Ourson | lent, balles douces un peu plus sur les côtés |
-| 3 | Mimi la Lapine | rapide, sautille, fait des fautes |
+| 3 | Léo le Lapin | rapide, sautille, fait des fautes |
 | 4 | M. Gaston, gardien de l'école George Vanier | moustache, casquette ; régulier |
 | 5 | Pingo le Pingouin | glisse, arrive toujours à temps |
-| 6 | Mme Sonia, prof de sport | bandeau bleu, sifflet ; varie lobs et balles croisées |
+| 6 | Capitaine Barbe-Bleue | pirate gentil, barbe bleue, bandeau sur l'œil ; varie lobs et balles croisées |
 | 7 | Kenta le Ninja | disparaît en fumée et réapparaît sous la balle ; très rapide |
-| 8 | Super Léa | super-héroïne masquée à cape ; smashs à traînée d'étoiles |
+| 8 | Super Noé | super-héros masqué à cape ; smashs à traînée d'étoiles |
 | 9 | Flamme le Dragon | petit dragon gentil ; balles de feu très rapides |
 | 10 | Robo-Max | robot **gris et bleu**, champion final, presque imbattable |
 
 Battre un adversaire (dans n'importe quelle durée de match) débloque le suivant.
+
+**Tous les champions sont des personnages masculins** (demande du 2026-11-09 : aucun personnage féminin dans le jeu).
 
 ## 6. Choix faits par le concepteur (à vérifier par le demandeur)
 
