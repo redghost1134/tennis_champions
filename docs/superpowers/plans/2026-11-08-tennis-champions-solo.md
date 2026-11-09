@@ -20,7 +20,7 @@
 - **Aucun handicap** : Yazan et Ghassan ont la même vitesse (4.4 m/s) et la même portée de frappe (0.9 m). La taille est purement visuelle.
 - Règles réelles : 0/15/30/40/jeu, **égalité/avantage**, service en diagonale, 2 essais, double faute, set à 6 jeux avec 2 d'écart et **tie-break à 6-6**.
 - Durées : `quick` = 1 jeu, `normal` = 3 jeux gagnants, `set` = 1 set.
-- Contrôles : croix 4 flèches à gauche ; LOB, SMASH, SERVICE à droite ; frappe automatique ; clavier : flèches, `Q` = lob, `S` = smash, `Espace` = service.
+- Contrôles : croix 4 flèches à gauche (déplacement seulement) ; visée ◀ / ▶ (armée comme LOB), LOB, SMASH, SERVICE à droite ; frappe automatique ; clavier : flèches, `G` / `D` = viser à gauche / droite, `Q` = lob, `S` = smash, `Espace` = service.
 - Caméra derrière son joueur : position `(px*0.5, 7.6, pz+7.4)`, regarde `(px*0.25, 0, -1.0)` (valeurs de la maquette v4).
 - Aucune donnée envoyée hors de la tablette ; progression dans `localStorage`.
 - Terrain (unités = mètres de jeu) : `W=7` (x ∈ [-3.5, 3.5]), `L=18` (z ∈ [-9, 9]), filet en z=0, hauteur 0.84, lignes de service à |z|=5, ligne médiane x=0. Le joueur humain est le côté `A` (z>0, regarde vers -z) ; l'adversaire est `B` (z<0).
@@ -384,7 +384,7 @@ test('match quick IA vs IA se termine avec un vainqueur', ...)  // boucle ≤ 20
 - Create: `src/ui/controls.js`, `src/ui/hud.js`, `src/render/effects.js`, `src/audio/sfx.js`
 
 **Interfaces:**
-- Produces: `createControls(root) => { read(): Input, setMode('serve'|'rally'|'hidden') }` — croix 4 flèches à gauche (boutons 84 px), à droite LOB, SMASH (armement en surbrillance, consommé par la frappe) et SERVICE (visible seulement au service) ; bouton **pause** (en haut au centre ; menu pause : « Reprendre » / « Quitter ») ; multi-touch via Pointer Events ; clavier (flèches, Q, S, Espace, Échap = pause).
+- Produces: `createControls(root) => { read(): Input, setMode('serve'|'rally'|'hidden') }` — croix 4 flèches à gauche (boutons 84 px), à droite visée ◀ / ▶, LOB, SMASH (armement en surbrillance, consommé par la frappe ; `Input.aimDir` vient de la visée armée, jamais des flèches) et SERVICE (visible seulement au service) ; bouton **pause** (en haut au centre ; menu pause : « Reprendre » / « Quitter ») ; multi-touch via Pointer Events ; clavier (flèches, Q, S, Espace, Échap = pause).
 - `createHud(root) => { setScore(score, names), showGauge(v|null), showAim(slot|null), flash(text, color) }` — messages exacts : « FAUTE ! », « DOUBLE FAUTE ! », « OUT ! », « FILET ! », « Point Yazan ! 🎉 », « Jeu Ghassan ! 🏆 », « Égalité », « Avantage Yazan », « Jeu décisif ! ». Jauge verte/jaune/rouge aux seuils 0.5 / 0.8.
 - `createEffects(ctx) => { onEvent(event, worldPos), tick(dt) }` — étincelles + anneau + onomatopée à la frappe (« PAF ! », « POK ! », « BIM ! », « TOC ! », « LOB ! », « SMASH ! »), anneau + poussière au rebond, tremblement du filet, confettis jaune/bleu/blanc/noir au point, tremblement caméra sur smash.
 - `createSfx(progress) => { play('hit'|'bounce'|'net'|'fault'|'point'|'win'|'click'), music(on:boolean), setMuted(b) }` — synthèse WebAudio (pas de fichiers), contexte audio repris au premier toucher.

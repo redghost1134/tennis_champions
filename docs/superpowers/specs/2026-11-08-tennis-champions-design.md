@@ -62,7 +62,7 @@ Ghassan sait jouer : **aucun handicap ni aide** n'est appliqué au plus jeune.
 
 - **Déplacement : croix de 4 flèches à gauche de l'écran** (gauche, droite, avancer vers le filet, reculer).
 - **Frappe automatique** : le personnage frappe dès qu'il est assez près de la balle, sans bouton. Sans autre action, la frappe est **simple** (coup droit ou revers selon le côté de la balle).
-- **Boutons à droite : LOB et SMASH** pour choisir un autre type de frappe. (« ou autre » a été évoqué : d'autres coups pourront s'ajouter plus tard.)
+- **Boutons à droite : visée ◀ / ▶, LOB et SMASH** pour choisir la direction et le type de frappe. (« ou autre » a été évoqué : d'autres coups pourront s'ajouter plus tard.)
 
 ### 5.4 Règles
 
@@ -112,7 +112,7 @@ Battre un adversaire (dans n'importe quelle durée de match) débloque le suivan
 - **Menus sans lecture** : gros boutons à pictogrammes et visages, texte en français en complément seulement.
 - **Langue** : français.
 - **Sons** : effets de frappe, rebond, filet, « Faute ! », applaudissements/fanfare de victoire, petite musique de menu ; bouton couper le son.
-- **Direction des frappes en échange** : si une flèche gauche/droite est maintenue au moment de la frappe, la balle part de ce côté ; sinon vers le milieu du terrain adverse avec une légère variation.
+- **Direction des frappes en échange** : deux boutons de visée **◀ 🎾 / 🎾 ▶** à droite (près de LOB/SMASH) s'arment comme LOB : la frappe suivante part de ce côté, puis le bouton s'éteint. Sans visée armée, la balle part vers le milieu du terrain adverse avec une légère variation. Les flèches servent **uniquement** à se déplacer, pour pouvoir courir d'un côté et frapper de l'autre (changement du 2026-11-09 : auparavant la flèche tenue au moment de la frappe donnait la direction, ce qui empêchait de courir à droite et frapper à gauche). La visée se combine avec LOB/SMASH.
 - **LOB / SMASH** : appuyer arme le prochain coup (bouton en surbrillance) ; un smash demandé sur une balle basse devient une frappe simple.
 - **Set de 6 jeux** : 2 jeux d'écart requis, **jeu décisif (tie-break) à 6-6**, conformément aux règles réelles.
 - **Changement de côté** : non représenté visuellement (la caméra reste derrière son joueur).

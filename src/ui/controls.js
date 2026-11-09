@@ -1,7 +1,7 @@
 import { createInputState } from './input.js';
 
-// Touch + keyboard controls. Left: 4-arrow d-pad. Right: LOB, SMASH (armed = highlighted until the
-// next hit) and SERVICE (serve mode only). Top centre: pause and sound. Multi-touch via Pointer Events.
+// Touch + keyboard controls. Left: 4-arrow d-pad (moves only). Right: aim ◀ / ▶, LOB, SMASH (armed =
+// highlighted until the next hit) and SERVICE (serve mode only). Top centre: pause and sound. Multi-touch via Pointer Events.
 const CSS = `
 .tc-ctl { position: absolute; pointer-events: auto; touch-action: none; -webkit-tap-highlight-color: transparent; }
 .tc-btn { display: flex; align-items: center; justify-content: center; border-radius: 22px; border: 4px solid #1c1d22;
@@ -17,6 +17,8 @@ const CSS = `
 .tc-act { width: 104px; height: 92px; flex-direction: column; }
 .tc-act.armed { background: #ffc72c; box-shadow: 0 0 0 6px #fff, 0 5px 0 #1c1d22; animation: tc-glow .6s ease-in-out infinite alternate; }
 @keyframes tc-glow { to { box-shadow: 0 0 0 10px rgba(255,255,255,.6), 0 5px 0 #1c1d22; } }
+.tc-aimrow { display: flex; gap: 10px; }
+.tc-aimrow .tc-act { width: 92px; height: 80px; font-size: 30px; flex-direction: row; gap: 2px; }
 .tc-serve { width: 132px; height: 132px; border-radius: 50%; background: #ffc72c; flex-direction: column; font-size: 52px; }
 .tc-top { top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; gap: 10px; }
 .tc-top .tc-btn { width: 64px; height: 64px; font-size: 30px; border-radius: 50%; }
@@ -89,6 +91,11 @@ export function createControls(root, { onQuit = () => {}, onClick = () => {}, mu
 
   // action buttons
   const right = el('tc-ctl tc-right');
+  const aimRow = el('tc-aimrow', '', right);
+  const aimL = el('tc-btn tc-act', '◀🎾', aimRow);
+  const aimR = el('tc-btn tc-act', '🎾▶', aimRow);
+  tapButton(aimL, () => { state.toggleAim('left'); sync(); });
+  tapButton(aimR, () => { state.toggleAim('right'); sync(); });
   const lob = el('tc-btn tc-act', '🌈<small>LOB</small>', right);
   const smash = el('tc-btn tc-act', '💥<small>SMASH</small>', right);
   const serve = el('tc-btn tc-serve', '🎾<small>SERVICE</small>', right);
@@ -125,15 +132,18 @@ export function createControls(root, { onQuit = () => {}, onClick = () => {}, mu
     const a = state.armed;
     lob.classList.toggle('armed', a === 'lob');
     smash.classList.toggle('armed', a === 'smash');
+    aimL.classList.toggle('armed', state.aim === -1);
+    aimR.classList.toggle('armed', state.aim === 1);
     const hidden = mode === 'hidden';
     pad.classList.toggle('tc-hide', hidden);
     right.classList.toggle('tc-hide', hidden);
     serve.classList.toggle('tc-hide', mode !== 'serve');
     lob.classList.toggle('tc-hide', mode === 'serve');
+    aimRow.classList.toggle('tc-hide', mode === 'serve');
     smash.classList.toggle('tc-hide', mode === 'serve');
   }
 
-  // keyboard (Q / S read by character so AZERTY and QWERTY both work)
+  // keyboard (letters read by character so AZERTY and QWERTY both work): Q lob, S smash, G / D aim left / right
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { setPaused(!paused); return; }
     if (paused) return;
@@ -143,6 +153,8 @@ export function createControls(root, { onQuit = () => {}, onClick = () => {}, mu
     const k = e.key.toLowerCase();
     if (k === 'q') { state.toggleArm('lob'); sync(); }
     else if (k === 's') { state.toggleArm('smash'); sync(); }
+    else if (k === 'g') { state.toggleAim('left'); sync(); }
+    else if (k === 'd') { state.toggleAim('right'); sync(); }
   });
   window.addEventListener('keyup', (e) => {
     if (KEYS[e.key]) state.set(KEYS[e.key], false);
@@ -159,7 +171,7 @@ export function createControls(root, { onQuit = () => {}, onClick = () => {}, mu
       if (m !== 'serve') state.set('serve', false);
       sync();
     },
-    // called by the game on a hit by the human player: the armed shot is used up
+    // called by the game on a hit by the human player: the armed shot and aim are used up
     disarm() {
       state.disarm();
       sync();
