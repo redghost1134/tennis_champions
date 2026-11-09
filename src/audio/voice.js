@@ -1,11 +1,27 @@
 // Coach voice: the device's built-in French speech (speechSynthesis), no audio files.
 // Silent when sound is muted or the API is missing; a new line always cuts the previous one.
+
+// Roger is a man: prefer a male French voice by name (Windows "Paul", Android Google variants frb/frd, ...);
+// when the device only has a female voice, use it with a lower pitch.
+const MALE = /\b(paul|thomas|henri|mathieu|nicolas|claude|antoine|daniel|guillaume|jean|pierre|louis|olivier|s[eé]bastien|fabrice|vincent|r[eé]my|g[eé]rard|yves|male|homme|masculin)\b|fr-fr-x-fr[bd]/i;
+const FEMALE = /\b(female|femme|f[eé]minin)\b/i;
+const MALE_PITCH = 1;
+const LOWERED_PITCH = 0.75;
+
+export function pickCoachVoice(voices) {
+  const fr = voices.filter((v) => v.lang?.toLowerCase().startsWith('fr'));
+  const ranked = [...fr.filter((v) => v.lang === 'fr-FR'), ...fr.filter((v) => v.lang !== 'fr-FR')];
+  const male = ranked.find((v) => MALE.test(v.name) && !FEMALE.test(v.name));
+  if (male) return { voice: male, pitch: MALE_PITCH };
+  return { voice: ranked[0] ?? null, pitch: LOWERED_PITCH };
+}
+
 export function createVoice(progress) {
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : null;
   let voice = null;
+  let pitch = LOWERED_PITCH;
   const pick = () => {
-    const vs = synth?.getVoices?.() ?? [];
-    voice = vs.find((v) => v.lang === 'fr-FR') ?? vs.find((v) => v.lang?.startsWith('fr')) ?? null;
+    ({ voice, pitch } = pickCoachVoice(synth?.getVoices?.() ?? []));
   };
   if (synth) {
     pick();
@@ -21,7 +37,7 @@ export function createVoice(progress) {
       u.lang = 'fr-FR';
       if (voice) u.voice = voice;
       u.rate = 0.95;
-      u.pitch = 1.05;
+      u.pitch = pitch;
       synth.speak(u);
     },
     stop() {
