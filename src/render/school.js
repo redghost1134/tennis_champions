@@ -21,7 +21,11 @@ function makeNetTexture() {
 }
 
 export function buildSchool(ctx) {
-  const { scene, toon, mesh, textTex } = ctx;
+  // static decor: materials are shared per colour (toonShared) and geometries per shape; only big shapes cast shadows
+  const { scene, toonShared: toon, mesh, textTex } = ctx;
+  const geo = new Map();
+  const G = (key, make) => { if (!geo.has(key)) geo.set(key, make()); return geo.get(key); };
+  const NO = { cast: false };
   const flat = (geo, mat, x, y, z, rotY = 0) => {
     const m = new THREE.Mesh(geo, mat);
     m.rotation.set(-Math.PI / 2, 0, rotY);
@@ -69,7 +73,7 @@ export function buildSchool(ctx) {
   mesh(new THREE.BoxGeometry(W + 1, 0.09, 0.06), toon(C.white), 0, NET_H, 0, netG);
   for (const x of [-(W + 1) / 2, (W + 1) / 2]) {
     mesh(new THREE.CylinderGeometry(0.08, 0.08, 1, 14), toon(C.yellow), x, 0.5, 0, scene, { ol: 1.15 });
-    mesh(new THREE.SphereGeometry(0.1, 12, 8), toon(C.blue), x, 1.02, 0);
+    mesh(new THREE.SphereGeometry(0.1, 12, 8), toon(C.blue), x, 1.02, 0, scene, NO);
   }
 
   // school buildings, one at each end
@@ -79,9 +83,11 @@ export function buildSchool(ctx) {
     g.rotation.y = rotY;
     scene.add(g);
     const Wb = 26, Hb = 7;
-    const b = (w, h, d, c, x, y, zz) => mesh(new THREE.BoxGeometry(w, h, d), toon(c), x, y, zz, g, { recv: true });
-    b(Wb, Hb, 4, C.white, 0, Hb / 2, 0);
-    b(Wb + 0.6, 0.6, 4.6, C.blue, 0, Hb + 0.3, 0);
+    // facade details (windows, trims, clock ticks) sit flat on the wall: no shadow casting
+    const b = (w, h, d, c, x, y, zz, cast = false) =>
+      mesh(G(`box${w},${h},${d}`, () => new THREE.BoxGeometry(w, h, d)), toon(c), x, y, zz, g, { recv: true, cast });
+    b(Wb, Hb, 4, C.white, 0, Hb / 2, 0, true);
+    b(Wb + 0.6, 0.6, 4.6, C.blue, 0, Hb + 0.3, 0, true);
     b(Wb + 0.2, 0.35, 4.1, C.yellow, 0, 3.3, 0);
     b(Wb + 0.2, 0.6, 4.1, C.black, 0, 0.3, 0);
     for (const fy of [1.9, 5.4]) {
@@ -107,11 +113,11 @@ export function buildSchool(ctx) {
     g.add(sign);
     b(13.9, 0.18, 0.2, C.black, 0, 5.47, 2.1); b(13.9, 0.18, 0.2, C.black, 0, 3.63, 2.1);
     // clock
-    b(2.6, 2.6, 1, C.blue, 0, Hb + 1.5, 1.35);
+    b(2.6, 2.6, 1, C.blue, 0, Hb + 1.5, 1.35, true);
     const cf = new THREE.Mesh(new THREE.CircleGeometry(0.95, 32), new THREE.MeshBasicMaterial({ color: C.white }));
     cf.position.set(0, Hb + 1.5, 1.87);
     g.add(cf);
-    mesh(new THREE.TorusGeometry(0.95, 0.1, 8, 32), toon(C.black), 0, Hb + 1.5, 1.88, g);
+    mesh(new THREE.TorusGeometry(0.95, 0.1, 8, 32), toon(C.black), 0, Hb + 1.5, 1.88, g, NO);
     for (let i = 0; i < 12; i++) {
       const a = (i / 12) * Math.PI * 2;
       b(0.06, 0.16, 0.02, C.black, Math.sin(a) * 0.78, Hb + 1.5 + Math.cos(a) * 0.78, 1.9).rotation.z = -a;
@@ -134,10 +140,10 @@ export function buildSchool(ctx) {
     const x = sx * (W / 2 + 3.5);
     for (let i = 0; i <= 10; i++) {
       const z = -HALF_L - 2 + (i * (L + 4)) / 10;
-      mesh(new THREE.BoxGeometry(0.16, 2.3, 0.16), toon(i % 2 ? C.blue : C.yellow), x, 1.15, z);
-      mesh(new THREE.SphereGeometry(0.12, 10, 8), toon(C.white), x, 2.35, z);
+      mesh(G('post', () => new THREE.BoxGeometry(0.16, 2.3, 0.16)), toon(i % 2 ? C.blue : C.yellow), x, 1.15, z);
+      mesh(G('cap', () => new THREE.SphereGeometry(0.12, 10, 8)), toon(C.white), x, 2.35, z, scene, NO);
     }
-    for (const y of [0.6, 1.4, 2.2]) mesh(new THREE.BoxGeometry(0.07, 0.09, L + 4), toon(C.white), x, y, 0);
+    for (const y of [0.6, 1.4, 2.2]) mesh(G('rail', () => new THREE.BoxGeometry(0.07, 0.09, L + 4)), toon(C.white), x, y, 0, scene, NO);
     const fence = new THREE.Mesh(new THREE.PlaneGeometry(L + 4, 2.2), new THREE.MeshBasicMaterial({ map: netTex.clone(), transparent: true, opacity: 0.6, side: THREE.DoubleSide, alphaTest: 0.1 }));
     fence.material.map.repeat.set(10, 3);
     fence.material.map.needsUpdate = true;
@@ -147,15 +153,15 @@ export function buildSchool(ctx) {
     for (let i = 0; i < 24; i++) {
       const z = -HALF_L - 1.6 + (i * (L + 3.2)) / 23;
       const sag = Math.sin(((i % 8) / 8) * Math.PI) * 0.3;
-      const f = mesh(new THREE.ConeGeometry(0.17, 0.38, 3), toon([C.yellow, C.blue, C.white, C.black][i % 4]), x, 2.12 - sag, z);
+      const f = mesh(G('flag', () => new THREE.ConeGeometry(0.17, 0.38, 3)), toon([C.yellow, C.blue, C.white, C.black][i % 4]), x, 2.12 - sag, z, scene, NO);
       f.rotation.x = Math.PI;
       flags.push(f);
     }
     for (const z of [-SERVICE_Z, SERVICE_Z]) {
       const bx = x - sx * 1.1;
-      mesh(new THREE.BoxGeometry(0.55, 0.1, 2.6), toon(C.blue), bx, 0.48, z, scene, { ol: 1.04 });
-      mesh(new THREE.BoxGeometry(0.1, 0.5, 2.6), toon(C.blue), bx + sx * 0.25, 0.75, z);
-      for (const dz of [-1.1, 1.1]) mesh(new THREE.BoxGeometry(0.08, 0.48, 0.08), toon(C.black), bx, 0.24, z + dz);
+      mesh(G('seat', () => new THREE.BoxGeometry(0.55, 0.1, 2.6)), toon(C.blue), bx, 0.48, z, scene, { ol: 1.04 });
+      mesh(G('backrest', () => new THREE.BoxGeometry(0.1, 0.5, 2.6)), toon(C.blue), bx + sx * 0.25, 0.75, z);
+      for (const dz of [-1.1, 1.1]) mesh(G('benchLeg', () => new THREE.BoxGeometry(0.08, 0.48, 0.08)), toon(C.black), bx, 0.24, z + dz, scene, NO);
     }
   }
 
@@ -166,8 +172,8 @@ export function buildSchool(ctx) {
     scene.add(g);
     mesh(new THREE.CylinderGeometry(0.1, 0.12, 3.3, 10), toon(C.black), 0, 1.65, 0, g);
     mesh(new THREE.BoxGeometry(0.1, 1.05, 1.6), toon(C.white), -0.3, 3.3, 0, g, { ol: 1.04 });
-    mesh(new THREE.BoxGeometry(0.11, 0.5, 0.6), toon(C.blue), -0.31, 3.15, 0, g);
-    mesh(new THREE.TorusGeometry(0.26, 0.035, 8, 20), toon(C.yellow), -0.66, 3, 0, g).rotation.x = Math.PI / 2;
+    mesh(new THREE.BoxGeometry(0.11, 0.5, 0.6), toon(C.blue), -0.31, 3.15, 0, g, NO);
+    mesh(new THREE.TorusGeometry(0.26, 0.035, 8, 20), toon(C.yellow), -0.66, 3, 0, g, NO).rotation.x = Math.PI / 2;
   }
 
   // hopscotch
@@ -185,12 +191,12 @@ export function buildSchool(ctx) {
   for (const sz of [-1, 1]) {
     for (let i = 0; i < 9; i++) {
       const t = new THREE.Group();
-      mesh(new THREE.CylinderGeometry(0.22, 0.32, 2.2, 8), toon('#6b4226'), 0, 1.1, 0, t);
+      mesh(G('trunk', () => new THREE.CylinderGeometry(0.22, 0.32, 2.2, 8)), toon('#6b4226'), 0, 1.1, 0, t, NO);
       const fo = new THREE.Group();
       fo.position.y = 2.9;
       t.add(fo);
       const fm = toon(['#3f9b3f', '#4caf50', '#2e8b3a'][i % 3]);
-      [[0, 0, 0, 1.6], [0.9, -0.3, 0.2, 1.1], [-0.9, -0.2, -0.1, 1.15], [0, 0.9, 0, 1.1]].forEach(([x, y, z, r]) => mesh(new THREE.IcosahedronGeometry(r, 1), fm, x, y, z, fo));
+      [[0, 0, 0, 1.6], [0.9, -0.3, 0.2, 1.1], [-0.9, -0.2, -0.1, 1.15], [0, 0.9, 0, 1.1]].forEach(([x, y, z, r]) => mesh(G('leaf' + r, () => new THREE.IcosahedronGeometry(r, 1)), fm, x, y, z, fo, NO));
       t.position.set(-19 + i * 4.8, 0, sz * (HALF_L + 14 + rnd(0, 2)));
       t.rotation.y = rnd(0, 6);
       scene.add(t);

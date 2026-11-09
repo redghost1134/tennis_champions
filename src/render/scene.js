@@ -21,6 +21,13 @@ export function createScene(canvas) {
   gradTex.minFilter = gradTex.magFilter = THREE.NearestFilter;
   gradTex.needsUpdate = true;
   const toon = (color, opts = {}) => new THREE.MeshToonMaterial({ color, gradientMap: gradTex, ...opts });
+  const sharedToon = new Map();
+  // memoised by colour + opts: for static decor only, never mutate the result
+  const toonShared = (color, opts = {}) => {
+    const key = color + JSON.stringify(opts);
+    if (!sharedToon.has(key)) sharedToon.set(key, toon(color, opts));
+    return sharedToon.get(key);
+  };
   const outlineMat = new THREE.MeshBasicMaterial({ color: '#15161a', side: THREE.BackSide });
   function outline(m, s) {
     const o = new THREE.Mesh(m.geometry, outlineMat);
@@ -88,14 +95,17 @@ export function createScene(canvas) {
   function setQuality(q) {
     const cfg = QUALITY[q];
     if (!cfg) return;
+    const sizeChanged = sun.shadow.mapSize.x !== cfg.shadow;
     const shadowsChanged = !quality || QUALITY[quality].shadows !== cfg.shadows;
     quality = q;
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, cfg.ratio));
     renderer.setSize(window.innerWidth, window.innerHeight, false);
     renderer.shadowMap.enabled = cfg.shadows;
     sun.castShadow = cfg.shadows;
-    sun.shadow.mapSize.set(cfg.shadow, cfg.shadow);
-    if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; }
+    if (sizeChanged) {
+      sun.shadow.mapSize.set(cfg.shadow, cfg.shadow);
+      sun.shadow.dispose();
+    }
     if (shadowsChanged) {
       scene.traverse((o) => {
         const ms = o.material ? [].concat(o.material) : [];
@@ -107,5 +117,5 @@ export function createScene(canvas) {
   window.addEventListener('resize', resize);
   setQuality('medium');
 
-  return { renderer, scene, toon, outline, mesh, textTex, setQuality, render: (camera) => renderer.render(scene, camera) };
+  return { renderer, scene, toon, toonShared, outline, outlineMat, mesh, textTex, setQuality, render: (camera) => renderer.render(scene, camera) };
 }
